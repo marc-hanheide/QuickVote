@@ -1,19 +1,17 @@
-$def with (data)
-
-$var title: QuickVote.
+$var title: QuickVote Admin
 
 <div class="row clearfix">
 	<div class="col-md-12 column">
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
-		    	<h3 class="panel-title">$data['question']</h3>
+		    	<h3 class="panel-title">$:question_global['question']</h3>
 		  	</div>
 		  	<div class="panel-body">
 				<form class="form" role="form" action="submit" method="post">
 					<input name="question" type="hidden" value="$:question_global['question']">
 					<input name="uuid" type="hidden" value="$:question_global['uuid']">
 			  		<div class="form-group">
-						$for answer in data['options']:
+						$for answer in question_global['answers']:
 							<div class="checkbox">
 							    <label>
 							      <input name="$answer" type="checkbox"> $answer

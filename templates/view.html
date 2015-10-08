@@ -1,0 +1,40 @@
+$def with (data)
+
+$var title: QuickVote Results
+
+
+<script type="text/javascript">
+	function update_chart() {
+		// Get the context of the canvas element we want to select
+		var ctx = document.getElementById("resultChart").getContext("2d");
+
+		$$.getJSON('/results/$data', function (data) {
+			console.log(data);
+			var myBarChart = new Chart(ctx).Bar(data, {});
+			$$("textarea#comments").text(data['comments']);
+		});
+
+	}
+
+	$$(document).ready(function () {
+			update_chart()
+		}
+	)
+</script>
+
+<div class="row clearfix">
+	<div class="col-md-12 column">
+		<div class="panel panel-default">
+		  	<div class="panel-heading">
+		    	<h3 class="panel-title">Results</h3>
+		  	</div>
+		  	<div class="panel-body">
+			  		<canvas style="padding: 0;
+    								margin: auto;
+    								display: block;
+    								width: 800px;" id="resultChart" width="500" height="300"></canvas>
+    				<textarea class="form-control" rows="3" id="comments"></textarea>
+		  	</div>
+		</div>
+	</div>
+</div>
