@@ -8,22 +8,69 @@ from uuid import uuid4
 from datetime import datetime
 from bson import json_util
 
-urls = (
-    '/', 'index',
-    '/submit', 'submit',
-    '/admin', 'admin',
-    '/results/(.*)', 'results',
-    '/view/(.*)', 'view',
-    '/editor', 'editor',
-    '/questions/?(.*)', 'questions'
-)
 
-question_global = {
-    'uuid': uuid4(),
-    'question': "What is the meaning of live?",
-    'answers': ['A', 'B', 'C', 'D'],
-    'correct': ['A, B']
+urls = {
+    'user':                             # arg1 is the domain (questionnaire)
+    {'pattern': '/(.+)/$',
+     'class': 'ask_question',
+     'method': 'get'
+     },
+    'view':                             # arg1 is the domain
+    {'pattern': '/(.+)/view',
+     'class': 'view',
+     'method': 'get'
+     },
+    'editor':                           # arg1 is the domain, arg2 the admin_url
+    {'pattern': '/(.+)/(.+)/editor',
+     'class': 'editor',
+     'method': 'get'
+     },
+    # API:
+    'user_post':                        # arg1 is the domain (POST only)
+    {'pattern': '/api/(.+)/a',
+     'class': 'ask_question',
+     'method': 'post'
+     },
+    'question_post':                    # for POSTs to edit questions
+    {'pattern': '/api/(.+)/(.+)/q',     # (uuid in payload)
+     'class': 'questions',              # arg1: domain, arg2: admin_url
+     'method': 'post'
+     },
+    'question_get':                     # for GETs to retrieve question data
+    {'pattern': '/api/(.+)/q/(.+)',     # arg1 is domain, arg 2 uuid of question
+     'class': 'questions',
+     'method': 'get'
+     },
+    'results_get':                      # GET: arg1 is uuid of the question
+    {'pattern': '/api/r/(.+)',
+     'class': 'results',
+     'method': 'get'
+     }
 }
+
+
+# urls = (
+#     '/(.+)/', 'ask_question',           # arg1 is the domain (questionnaire)
+#     '/(.+)/view', 'view',               # arg1 is the domain
+#                                        #(returns results for current question)
+#     '/(.+)/(.+)/editor', 'editor',    # arg1 is the domain, arg2 the admin_url
+
+#     # The following are API access points
+#     '/api/(.+)/(.+)/q', 'questions',    # for POSTs to edit questions
+#                                         # (uuid in payload)
+#                                         # arg1: domain, arg2: admin_url
+#     '/api/q/(.+)', 'questions',         # for GETs to retrieve question data
+#                                         # arg1 is uuid of question
+#     '/api/r/(.+)', 'results',           # GET: arg1 is uuid of the question
+#     '/api/(.+)/a', 'ask_question',      # arg1 is the domain (POST only)
+# )
+
+# question_global = {
+#     'uuid': uuid4(),
+#     'question': "What is the meaning of live?",
+#     'answers': ['A', 'B', 'C', 'D'],
+#     'correct': ['A, B']
+# }
 
 
 client = MongoClient('10.210.9.130', 27017)
@@ -35,34 +82,92 @@ qv_questions = qv_db['questions']
 
 
 renderer = web.template.render('templates', base="base", globals=globals())
-app = web.application(urls, globals())
+app = web.application((), globals())
+
+for v in urls.values():
+    app.add_mapping(v['pattern'], v['class'])
+    v['url_pattern'] = v['pattern'].replace('(.+)', '%s')
+    print '(%s, %s)' % (v['pattern'], v['class'])
 
 
-class index:
-    def GET(self):
-        uuid = question_global['uuid']
-        try:
-            qs = qv_questions.find_one({'uuid': uuid})
-            return renderer.index(qs)
-        except Exception as e:
-            raise web.NotFound('error getting questionnaire: ' + e.message)
+class domain_manager:
+
+    def __init__(self, db):
+        self.domain_coll = db['domains']
+        self.ensure_debug_domain()
+
+    def ensure_debug_domain(self):
+        # ensure testdomain
+        if self.domain_coll.find_one({'name': 'debug'}) is None:
+            self.domain_coll.insert(
+                {
+                    'name': 'debug',
+                    'inserted_at': datetime.now(),
+                    'admin_url': str(uuid4()),
+                    'active_question': None
+                }
+            )
+
+    def get_name_from_admin_url(self, admin_url):
+        c = self.domain_coll.find_one({'admin_url': admin_url})
+        return c['name'] if c is not None else None
+
+    def is_valid_admin(self, domain, admin_url):
+        true_name = self.get_name_from_admin_url(admin_url)
+        return true_name == domain
+
+    def get_active_question(self, domain):
+        c = self.domain_coll.find_one({'name': domain})
+        return c['active_question'] if c is not None else None
+
+    def set_active_question(self, domain, uuid):
+        c = self.domain_coll.find_one({'name': domain})
+        if c is None:
+            raise RuntimeError('domain %s not in database' % domain)
+        c['active_question'] = uuid
+        self.domain_coll.save(c)
 
 
-class submit:
-    def POST(self):
-        print web.input()
-        qv_collection.insert_one(web.input())
-        return renderer.submit()
+qv_domains = domain_manager(qv_db)
+
+
+### Renderers for actual interface:
+class ask_question:
+    def GET(self, domain):
+        uuid = qv_domains.get_active_question(domain)
+        qs = qv_questions.find_one({'uuid': uuid})
+        data = {'qs': qs,
+                'submit_url': urls['user_post']['url_pattern'] % domain,
+                }
+        return renderer.index(data)
+
+    def POST(self, domain):
+        data = {}
+        data.update(web.input())
+        data['env'] = {}
+        for (k, v) in web.ctx.env.items():
+            if type(v) is str:
+                data['env'][k.replace('.','_')] = v
+        data['inserted_at'] = datetime.now()
+        qv_collection.insert_one(data)
+        return renderer.submit(domain)
 
 
 class editor:
 
-    def GET(self):
-        qs = qv_questions.find({}).sort([('inserted_at', -1)])
+    def GET(self, domain, admin_url):
+        if not qv_domains.is_valid_admin(domain, admin_url):
+            return web.notacceptable()
+        qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
 
         data = {
             'existing_questions': [],
-            'new_uuid': uuid4()
+            'new_uuid': uuid4(),
+            'domain': domain,
+            'submit_url': urls['question_post']['url_pattern']
+            % (domain, admin_url),
+            'get_url': urls['question_get']['url_pattern'] % (domain, ''),
+            'results_url': urls['view']['url_pattern'] % (domain),
         }
 
         qsd = [q for q in qs]
@@ -72,13 +177,31 @@ class editor:
         return renderer.editor(data)
 
 
+class view:
+
+    def GET(self, domain):
+        uuid = qv_domains.get_active_question(domain)
+        data = {
+            'uuid': uuid,
+            'domain': domain,
+            'get_url': urls['results_get']['url_pattern'] % (uuid)
+        }
+        return renderer.view(data)
+
+
+## API access points
+
 class questions:
 
-    def POST(self, uuid=None):
+    def POST(self, domain, admin_url):
+        if not qv_domains.is_valid_admin(domain, admin_url):
+            return web.notacceptable()
+
         user_data = web.input()
         if hasattr(user_data, 'options') and \
            hasattr(user_data, 'correct') and \
            hasattr(user_data, 'question') and \
+           hasattr(user_data, 'domain') and \
            hasattr(user_data, 'uuid'):
             options_str = user_data.options.split(',')
             correct_str = user_data.correct.split(',')
@@ -87,72 +210,96 @@ class questions:
                 'correct': [o.strip() for o in correct_str],
                 'question': user_data.question,
                 'uuid': user_data.uuid,
+                'domain': user_data.domain,
                 'inserted_at': datetime.now()
             }
+            # the is a delete request if the question is empty:
             if len(user_data.question) > 0:
                 qv_questions.replace_one({'uuid': user_data.uuid},
                                          doc, upsert=True)
             else:
                 qv_questions.remove({'uuid': user_data.uuid})
         else:
-            web.internalerror("could not write data")
-        return web.seeother('/editor')
+            web.internalerror("could not all data provided as required: "
+                              "user_data=%s" % user_data)
+        return web.seeother('/%s/%s/editor' % (domain, admin_url))
 
-    def GET(self, uuid=None):
-        print uuid, question_global
-        question_global['uuid'] = uuid
-        print uuid, question_global
-        if uuid is not None:
-            q = qv_questions.find_one({'uuid': uuid})
+    def GET(self, domain, uuid):
+        q = qv_questions.find_one({'uuid': uuid})
+        if q is not None:
+            qv_domains.set_active_question(domain, uuid)
             web.header('Content-Type', 'application/json')
-
             return dumps(q, default=json_util.default)
         else:
-            return dumps(None)
+            return web.notfound()
 
 
 class results:
 
     def compute_results(self, uuid):
         answers = qv_collection.find({'uuid': uuid})
+        question = qv_questions.find_one({'uuid': uuid})
 
         results = {}
         comments = []
-        for answer in answers:
-            for (k, v) in answer.items():
-                if (v == 'on'):
-                    if k not in results:
-                        results[k] = 0
-                    results[k] += 1
-            comments.append(answer['feedback'])
+        sorted_keys = []
+        if question is not None:
 
-        sorted_keys = results.keys()
-        sorted_keys.sort()
+            total_submissions = 0
+            total_correct_submissions = 0
 
-        dataset = {
-            'label': "result",
-            'data': [results[r] for r in sorted_keys]
-        }
+            for answer in answers:
+                correct = True
+                for opt in question['options']:
+                    if opt in answer:
+                        if opt not in results:
+                            results[opt] = 0
+                        results[opt] += 1
+                        if not opt in question['correct']:
+                            correct = False
+                    else:
+                        if opt in question['correct']:
+                            correct = False
 
-        data = {
-            'labels':   sorted_keys,
-            'datasets': [dataset],
-            'comments': comments
-        }
+                total_correct_submissions += 1 if correct else 0
+                total_submissions += 1
+                comments.append(answer['feedback'])
 
-        return data
+            sorted_keys = results.keys()
+            sorted_keys.sort()
 
-    def GET(self, uuid=question_global['uuid']):
+            dataset = {
+                'label': "result",
+                'fillColor': "rgba(120,0,0,0.5)",
+                'data': [results[r] for r in sorted_keys]
+            }
+
+            print total_submissions, total_correct_submissions
+
+            data = {
+                'labels':   sorted_keys,
+                'datasets': [dataset],
+                'comments': comments,
+                'totals': total_submissions,
+                'corrects': total_correct_submissions,
+                'percent': "%2.1f%%"
+                % (total_correct_submissions * 100.0 / total_submissions),
+                'question': question['question']
+                if question is not None
+                else '*unknown*'
+            }
+
+            return data
+        else:
+            raise web.NotFound('error getting data')
+
+    def GET(self, uuid):
         web.header('Content-Type', 'application/json')
         data = self.compute_results(uuid)
         print uuid, data
         return dumps(data)
 
 
-class view:
-
-    def GET(self, uuid=question_global['uuid']):
-        return renderer.view(uuid)
                     # var data = {
                     #     labels: ["January", "February", "March", "April", "May", "June", "July"],
                     #     datasets: [

@@ -1,12 +1,13 @@
 $def with (data)
 
-$var title: QuickVote Results
+$var title: QuickVote Editor (Admin)
 
 <script type="text/javascript">
 	function choose(o) {
 		console.log(o.id)
-		$$.getJSON("/questions/" + o.id, function(data) {
+		$$.getJSON("$data['get_url']" + o.id, function(data) {
 			$$("#uuid").val(data['uuid']);
+			$$("#domain").val(data['domain']);
 			$$("#question").val(data['question']);
 			$$("#options").val(data['options']);
 			$$("#correct").val(data['correct']);
@@ -15,6 +16,7 @@ $var title: QuickVote Results
 	}
 	function new_question() {
 		$$("#uuid").val("$data['new_uuid']");
+		$$("#domain").val("$data['domain']");
 		$$("#question").val("");
 		$$("#options").val("");
 		$$("#correct").val("");
@@ -35,7 +37,7 @@ $var title: QuickVote Results
 <div class="row">
 	<div class="panel panel-default">
   	<div class="panel-heading">
-    	<h3 class="panel-title">Results</h3>
+    	<h3 class="panel-title">Editor</h3>
   	</div>
   	<div class="panel-body">
 
@@ -60,11 +62,8 @@ $var title: QuickVote Results
 						</li>
 				</ul>
 			</div>
-<!-- 			<div class="btn-group">
-				 
-				<button class="btn btn-default" type="button">
-					<em class="glyphicon glyphicon-align-left"></em> Left
-				</button> 
+<!--  			<div class="btn-group">
+
 				<button class="btn btn-default" type="button">
 					<em class="glyphicon glyphicon-align-center"></em> Center
 				</button> 
@@ -75,7 +74,12 @@ $var title: QuickVote Results
 					<em class="glyphicon glyphicon-align-justify"></em> Justify
 				</button>
 			</div>
- -->		</div>
+ --> 			<div class="btn-group" role="group">
+				<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
+					Show Results
+				</a> 
+			</div>
+		</div>
 		<div class="col-md-9">
 			<form role="form">
 				<div class="form-group">
@@ -83,7 +87,14 @@ $var title: QuickVote Results
 					<label for="uuid">
 						UUID
 					</label>
-					<input type="text" class="form-control" name="uuid" id="uuid" placeholder="pick a question on the left or generate a new one"/>
+					<input type="text" readonly="readonly" class="form-control" name="uuid" id="uuid" />
+				</div>
+				<div class="form-group">
+					 
+					<label for="domain">
+						domain
+					</label>
+					<input type="text" readonly="readonly" class="form-control" name="domain" id="domain" />
 				</div>
 				<div class="form-group">
 					 
@@ -106,7 +117,7 @@ $var title: QuickVote Results
 					</label>
 					<input type="text" class="form-control" name="correct" id="correct" placeholder="comma-separated list of CORRECT options, e.g. B,C"/>
 				</div>
-				<button type="submit" class="btn btn-default" formmethod="post" formaction="/questions">
+				<button type="submit" class="btn btn-default" formmethod="post" formaction="$data['submit_url']">
 					Save
 				</button>
 			</form>
