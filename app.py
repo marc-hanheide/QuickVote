@@ -78,8 +78,13 @@ client = MongoClient('10.210.9.130', 27017)
 qv_db = client['QuickVote']
 
 qv_collection = qv_db['answers']
-qv_questions = qv_db['questions']
+qv_collection.create_index('uuid')
+qv_collection.create_index('domain')
+qv_collection.create_index('inserted_at')
 
+qv_questions = qv_db['questions']
+qv_questions.create_index('uuid', unique=True)
+qv_questions.create_index('domain')
 
 renderer = web.template.render('templates', base="base", globals=globals())
 app = web.application((), globals())
@@ -95,6 +100,9 @@ class domain_manager:
     def __init__(self, db):
         self.domain_coll = db['domains']
         self.ensure_debug_domain()
+        self.domain_coll.create_index('name', unique=True)
+        self.domain_coll.create_index('admin_url', unique=True)
+
 
     def ensure_debug_domain(self):
         # ensure testdomain
