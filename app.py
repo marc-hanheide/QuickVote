@@ -255,19 +255,29 @@ class results:
 
             total_submissions = 0
             total_correct_submissions = 0
+            tp = 1.0
+            tn = 1.0
+            fp = 1.0
+            fn = 1.0
 
             for answer in answers:
                 correct = True
                 for opt in question['options']:
+                    if opt not in results:
+                        results[opt] = 0
                     if opt in answer:
-                        if opt not in results:
-                            results[opt] = 0
                         results[opt] += 1
-                        if not opt in question['correct']:
+                        if opt in question['correct']:
+                            tp += 1
+                        else:
+                            fp += 1
                             correct = False
                     else:
                         if opt in question['correct']:
                             correct = False
+                            fn += 1
+                        else:
+                            tn += 1
 
                 total_correct_submissions += 1 if correct else 0
                 total_submissions += 1
@@ -277,21 +287,45 @@ class results:
             sorted_keys.sort()
 
             dataset = {
-                'label': "result",
+                'label': "responses",
                 'fillColor': "rgba(120,0,0,0.5)",
                 'data': [results[r] for r in sorted_keys]
             }
 
-            print total_submissions, total_correct_submissions
+            # correct_data = []
+            # for r in sorted_keys:
+            #     if r in correct:
+            #         correct_data.append(total_submissions)
+            #     else:
+            #         correct_data.append(0)
+
+            dataset_c = {
+                'label': "correct",
+                'fillColor': "rgba(0,100,0,0.5)",
+                'data': [(total_submissions
+                if r in question['correct'] else 0) for r in sorted_keys]
+            }
+
+            print total_submissions, total_correct_submissions, dataset_c
+
+            sensitivity = tp / (tp + fn)
+            specificity = tn / (tn + fp)
+            accuracy = (tp + tn) / (tp + tn + fp + fn)
 
             data = {
                 'labels':   sorted_keys,
-                'datasets': [dataset],
+                'datasets': [dataset, dataset_c],
                 'comments': comments,
                 'totals': total_submissions,
                 'corrects': total_correct_submissions,
                 'percent': "%2.1f%%"
                 % (total_correct_submissions * 100.0 / total_submissions),
+                'sensitivity': "%2.1f%%"
+                % (sensitivity * 100.0),
+                'specificity': "%2.1f%%"
+                % (specificity * 100.0),
+                'accuracy': "%2.1f%%"
+                % (accuracy * 100.0),
                 'question': question['question']
                 if question is not None
                 else '*unknown*'

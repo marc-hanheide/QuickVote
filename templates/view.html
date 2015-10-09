@@ -10,14 +10,18 @@ $var title: QuickVote Results
 
 		$$.getJSON("$data['get_url']", function (data) {
 			console.log(data);
-			var myBarChart = new Chart(ctx).Bar(data, {});
+			var myBarChart = new Chart(ctx).Bar(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>"});
+			$$("div#legend").html(myBarChart.generateLegend())
 			$$("textarea#comments").text(data['comments']);
 			$$("h3#question").text(data['question'])
 			$$("div#total").text(data['totals'])
 			$$("div#correct").text(data['corrects'])
 			// change colour according to level later on:
-			$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
+			//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
 			$$("div#ratio").text(data['percent'])
+			$$("div#sensitivity").text(data['sensitivity'])
+			$$("div#specificity").text(data['specificity'])
+			$$("div#accuracy").text(data['accuracy'])
 		});
 
 	}
@@ -29,7 +33,7 @@ $var title: QuickVote Results
 </script>
 
 <div class="row clearfix">
-	<div class="col-md-2 column">
+	<div class="col-md-3 column">
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">Stats</h3>
@@ -42,13 +46,23 @@ $var title: QuickVote Results
 				<div class="btn btn-success btn-lg btn-block" type="button">
 		  			Correct <span class="badge"><div id="correct">-</div></span>
 				</div>
-				<div class="btn btn-primary btn-lg btn-block" type="button">
-		  			Ratio <span class="badge"><div id="ratio">-</div></span>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Correct % <span class="badge"><div id="ratio">-</div></span>
 				</div>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Sensitivity % <span class="badge"><div id="sensitivity">-</div></span>
+				</div>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Specificity % <span class="badge"><div id="specificity">-</div></span>
+				</div>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Accuracy % <span class="badge"><div id="accuracy">-</div></span>
+				</div>
+				<div id="legend"></div>
 			</div>
 		</div>
 	</div>
-	<div class="col-md-10 column">
+	<div class="col-md-9 column">
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">Histogram</h3>
@@ -58,7 +72,7 @@ $var title: QuickVote Results
 		  		<canvas style="padding: 0;
 								margin: auto;
 								display: block;
-								width: 800px;" id="resultChart" width="500" height="300"></canvas>
+								width: 700px;" id="resultChart" width="500" height="300"></canvas>
 				<textarea class="form-control" rows="3" id="comments"></textarea>
 		  	</div>
 		</div>
