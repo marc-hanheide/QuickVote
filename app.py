@@ -8,6 +8,7 @@ from uuid import uuid4
 from datetime import datetime
 from bson import json_util
 
+import config
 
 urls = {
     'user':                             # arg1 is the domain (questionnaire)
@@ -73,7 +74,7 @@ urls = {
 # }
 
 
-client = MongoClient('10.210.9.130', 27017)
+client = MongoClient(config.mongo_host, config.mongo_port)
 
 qv_db = client['QuickVote']
 
@@ -87,7 +88,15 @@ qv_questions.create_index('uuid', unique=True)
 qv_questions.create_index('domain')
 
 renderer = web.template.render('templates', base="base", globals=globals())
-app = web.application((), globals())
+
+
+class QuickVoteApp(web.application):
+    def run(self, *middleware):
+        func = self.wsgifunc(*middleware)
+        return web.httpserver.runsimple(func, ('0.0.0.0', config.listen_port))
+
+
+app = QuickVoteApp((), globals())
 
 for v in urls.values():
     app.add_mapping(v['pattern'], v['class'])
