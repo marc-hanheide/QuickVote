@@ -358,7 +358,7 @@ class results:
         response = "data: " + data + "\n\n"
         return response
 
-    def GET_SSE(self, uuid):
+    def GET(self, uuid):
         block = False
         web.header("Content-Type", "text/event-stream")
         web.header('Cache-Control', 'no-cache')
@@ -372,17 +372,18 @@ class results:
                 new_input.release()
             block = True
             data = self.compute_results(uuid)
+            print "got results, yielding it now"
             yield self.response(dumps(data))
 
-    def GET(self, uuid):
+    def GET_old(self, uuid):
         print web.ctx.env
-        if web.ctx.env['HTTP_ACCEPT'] == 'text/event-stream':
-            return self.GET_SSE(uuid)
-        else:
-            web.header('Content-Type', 'application/json')
-            data = self.compute_results(uuid)
-            print uuid, data
-            return dumps(data)
+        #if web.ctx.env['HTTP_ACCEPT'] == 'text/event-stream':
+        return self.GET_SSE(uuid)
+        #else:
+        #    web.header('Content-Type', 'application/json')
+        #    data = self.compute_results(uuid)
+        #    print uuid, data
+        #    return dumps(data)
 
 
                     # var data = {
