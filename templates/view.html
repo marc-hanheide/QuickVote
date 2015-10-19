@@ -24,7 +24,6 @@ $var title: QuickVote Results
 		// Get the context of the canvas element we want to select
 
 		last_data = data;
-		console.log(data);
 		$$("h3#question").text(data['question'])
 		$$("div#total").text(data['totals'])
 		$$("div#correct").text(data['corrects'])
@@ -35,9 +34,7 @@ $var title: QuickVote Results
 		$$("div#specificity").text(data['specificity'])
 		$$("div#accuracy").text(data['accuracy'])
 
-		console.log("update chart? " + $$("#display_toggle").prop('checked'));
 		if ($$("#display_toggle").prop('checked')) {
-			console.log("update chart");
 			display_chart(data);
 		}
 	}
@@ -50,12 +47,10 @@ $var title: QuickVote Results
 
 			var source = new EventSource("$data['get_url']");
 			source.onmessage = function(event) {
-			    console.log("server update: " + event.data);
 			    update_chart(JSON.parse(event.data));
 			};
 
 			$$('#display_toggle').change(function() {
-				console.log($$(this).prop('checked'));
 				if ($$(this).prop('checked')) {
       				document.getElementById("histogram").hidden = false;
       				if (last_data != null)

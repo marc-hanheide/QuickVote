@@ -326,8 +326,6 @@ class results:
                 if r in question['correct'] else 0) for r in sorted_keys]
             }
 
-            print total_submissions, total_correct_submissions, dataset_c
-
             sensitivity = tp / (tp + fn)
             specificity = tn / (tn + fp)
             accuracy = (tp + tn) / (tp + tn + fp + fn)
@@ -375,19 +373,8 @@ class results:
             block = True
             #time.sleep(1);
             data = self.compute_results(uuid)
-            print "got results, yielding it now"
             r = self.response(dumps(data))
             yield r
-
-    def GET_old(self, uuid):
-        print web.ctx.env
-        #if web.ctx.env['HTTP_ACCEPT'] == 'text/event-stream':
-        return self.GET_SSE(uuid)
-        #else:
-        #    web.header('Content-Type', 'application/json')
-        #    data = self.compute_results(uuid)
-        #    print uuid, data
-        #    return dumps(data)
 
 
                     # var data = {
@@ -419,7 +406,6 @@ class results:
 def signal_handler(signum, frame):
     print "stopped."
     _exit(signal.SIGTERM)
-
 
 
 if __name__ == '__main__':
