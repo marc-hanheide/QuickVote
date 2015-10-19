@@ -301,7 +301,8 @@ class results:
 
                 total_correct_submissions += 1 if correct else 0
                 total_submissions += 1
-                comments.append(answer['feedback'])
+                if len(answer['feedback']) > 0:
+                    comments.append(answer['feedback'])
 
             sorted_keys = results.keys()
             sorted_keys.sort()
