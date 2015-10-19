@@ -31,6 +31,14 @@ $var title: QuickVote Editor (Admin)
 
 	}
 
+	function submit_edits() {
+		console.log("save")
+		var d = $$( "#editform" ).serialize()
+		console.log(d)
+		$$.post("$data['submit_url']", d);
+		location.reload();
+	}
+
 </script>
 
 
@@ -81,7 +89,7 @@ $var title: QuickVote Editor (Admin)
 			</div>
 		</div>
 		<div class="col-md-9">
-			<form role="form">
+			<form role="form" id="editform">
 				<div class="form-group">
 					 
 					<label for="uuid">
@@ -117,7 +125,7 @@ $var title: QuickVote Editor (Admin)
 					</label>
 					<input type="text" class="form-control" name="correct" id="correct" placeholder="comma-separated list of CORRECT options, e.g. B,C"/>
 				</div>
-				<button type="submit" class="btn btn-default" formmethod="post" formaction="$data['submit_url']">
+				<button type="button" class="btn btn-default" onclick="submit_edits();">
 					Save
 				</button>
 			</form>

@@ -167,7 +167,7 @@ class ask_question:
                 data['env'][k.replace('.','_')] = v
         data['inserted_at'] = datetime.now()
         qv_collection.insert(data)
-        return renderer.submit(domain)
+        return renderer.submit(urls['user']['url_pattern'].replace('$','') % domain)
 
 
 class editor:
