@@ -333,6 +333,7 @@ class results:
             accuracy = (tp + tn) / (tp + tn + fp + fn)
 
             data = {
+                'dummy': range(1, 2048),  # dummy data to stop proxy buffering
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
                 'comments': comments,
@@ -368,7 +369,7 @@ class results:
             new_input.acquire()
             try:
                 if block:
-                    new_input.wait(timeout=3)
+                    new_input.wait(timeout=30)
             finally:
                 new_input.release()
             block = True
