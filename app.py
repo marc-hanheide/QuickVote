@@ -12,38 +12,38 @@ import config
 
 urls = {
     'user':                             # arg1 is the domain (questionnaire)
-    {'pattern': '/(.+)/$',
+    {'pattern': '/qv/(.+)/$',
      'class': 'ask_question',
      'method': 'get'
      },
     'view':                             # arg1 is the domain
-    {'pattern': '/(.+)/view',
+    {'pattern': '/qv/(.+)/view',
      'class': 'view',
      'method': 'get'
      },
     'editor':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/(.+)/(.+)/editor',
+    {'pattern': '/qv/(.+)/(.+)/editor',
      'class': 'editor',
      'method': 'get'
      },
     # API:
     'user_post':                        # arg1 is the domain (POST only)
-    {'pattern': '/api/(.+)/a',
+    {'pattern': '/qv/api/(.+)/a',
      'class': 'ask_question',
      'method': 'post'
      },
     'question_post':                    # for POSTs to edit questions
-    {'pattern': '/api/(.+)/(.+)/q',     # (uuid in payload)
+    {'pattern': '/qv/api/(.+)/(.+)/q',     # (uuid in payload)
      'class': 'questions',              # arg1: domain, arg2: admin_url
      'method': 'post'
      },
     'question_get':                     # for GETs to retrieve question data
-    {'pattern': '/api/(.+)/q/(.+)',     # arg1 is domain, arg 2 uuid of question
+    {'pattern': '/qv/api/(.+)/q/(.+)',     # arg1 is domain, arg 2 uuid of question
      'class': 'questions',
      'method': 'get'
      },
     'results_get':                      # GET: arg1 is uuid of the question
-    {'pattern': '/api/r/(.+)',
+    {'pattern': '/qv/api/r/(.+)',
      'class': 'results',
      'method': 'get'
      }
@@ -166,7 +166,7 @@ class ask_question:
             if type(v) is str:
                 data['env'][k.replace('.','_')] = v
         data['inserted_at'] = datetime.now()
-        qv_collection.insert_one(data)
+        qv_collection.insert(data)
         return renderer.submit(domain)
 
 
@@ -232,14 +232,14 @@ class questions:
             }
             # the is a delete request if the question is empty:
             if len(user_data.question) > 0:
-                qv_questions.replace_one({'uuid': user_data.uuid},
+                qv_questions.update({'uuid': user_data.uuid},
                                          doc, upsert=True)
             else:
                 qv_questions.remove({'uuid': user_data.uuid})
         else:
             web.internalerror("could not all data provided as required: "
                               "user_data=%s" % user_data)
-        return web.seeother('/%s/%s/editor' % (domain, admin_url))
+        return web.ok()#web.seeother('/%s/%s/editor' % (domain, admin_url))
 
     def GET(self, domain, uuid):
         q = qv_questions.find_one({'uuid': uuid})
