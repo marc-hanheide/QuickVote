@@ -7,6 +7,9 @@ from pymongo import MongoClient
 from uuid import uuid4
 from datetime import datetime
 from bson import json_util
+from threading import Condition
+import sys
+from os import _exit
 
 import config
 
@@ -38,7 +41,7 @@ urls = {
      'method': 'post'
      },
     'question_get':                     # for GETs to retrieve question data
-    {'pattern': '/qv/api/(.+)/q/(.+)',     # arg1 is domain, arg 2 uuid of question
+    {'pattern': '/qv/api/(.+)/q/(.+)',  # arg1 is domain, arg 2 uuid of question
      'class': 'questions',
      'method': 'get'
      },
@@ -76,6 +79,8 @@ urls = {
 
 client = MongoClient(config.mongo_host, config.mongo_port)
 
+new_input = Condition()
+
 qv_db = client['QuickVote']
 
 qv_collection = qv_db['answers']
@@ -111,7 +116,6 @@ class domain_manager:
         self.ensure_debug_domain()
         self.domain_coll.create_index('name', unique=True)
         self.domain_coll.create_index('admin_url', unique=True)
-
 
     def ensure_debug_domain(self):
         # ensure testdomain
@@ -164,10 +168,16 @@ class ask_question:
         data['env'] = {}
         for (k, v) in web.ctx.env.items():
             if type(v) is str:
-                data['env'][k.replace('.','_')] = v
+                data['env'][k.replace('.', '_')] = v
         data['inserted_at'] = datetime.now()
-        qv_collection.insert(data)
-        return renderer.submit(urls['user']['url_pattern'].replace('$','') % domain)
+        new_input.acquire()
+        try:
+            qv_collection.insert(data)
+            new_input.notifyAll()
+        finally:
+            new_input.release()
+        return renderer.submit(urls['user']['url_pattern']
+                               .replace('$', '') % domain)
 
 
 class editor:
@@ -233,13 +243,13 @@ class questions:
             # the is a delete request if the question is empty:
             if len(user_data.question) > 0:
                 qv_questions.update({'uuid': user_data.uuid},
-                                         doc, upsert=True)
+                                    doc, upsert=True)
             else:
                 qv_questions.remove({'uuid': user_data.uuid})
         else:
             web.internalerror("could not all data provided as required: "
                               "user_data=%s" % user_data)
-        return web.ok()#web.seeother('/%s/%s/editor' % (domain, admin_url))
+        return web.ok()  # web.seeother('/%s/%s/editor' % (domain, admin_url))
 
     def GET(self, domain, uuid):
         q = qv_questions.find_one({'uuid': uuid})
@@ -344,11 +354,35 @@ class results:
         else:
             raise web.NotFound('error getting data')
 
+    def response(self, data):
+        response = "data: " + data + "\n\n"
+        return response
+
+    def GET_SSE(self, uuid):
+        block = False
+        web.header("Content-Type", "text/event-stream")
+        web.header('Cache-Control', 'no-cache')
+        web.header('Content-length:', 0)
+        while True:
+            new_input.acquire()
+            try:
+                if block:
+                    new_input.wait(timeout=sys.maxint)
+            finally:
+                new_input.release()
+            block = True
+            data = self.compute_results(uuid)
+            yield self.response(dumps(data))
+
     def GET(self, uuid):
-        web.header('Content-Type', 'application/json')
-        data = self.compute_results(uuid)
-        print uuid, data
-        return dumps(data)
+        print web.ctx.env
+        if web.ctx.env['HTTP_ACCEPT'] == 'text/event-stream':
+            return self.GET_SSE(uuid)
+        else:
+            web.header('Content-Type', 'application/json')
+            data = self.compute_results(uuid)
+            print uuid, data
+            return dumps(data)
 
 
                     # var data = {
@@ -378,8 +412,9 @@ class results:
 
 
 def signal_handler(signum, frame):
-    app.stop()
     print "stopped."
+    _exit(signal.SIGTERM)
+
 
 
 if __name__ == '__main__':

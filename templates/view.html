@@ -4,30 +4,68 @@ $var title: QuickVote Results
 
 
 <script type="text/javascript">
-	function update_chart() {
-		// Get the context of the canvas element we want to select
+
+	last_data = null;
+
+
+	function display_chart(data) {
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
-		$$.getJSON("$data['get_url']", function (data) {
-			console.log(data);
-			var myBarChart = new Chart(ctx).Bar(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>"});
-			$$("div#legend").html(myBarChart.generateLegend())
-			$$("textarea#comments").text(data['comments']);
-			$$("h3#question").text(data['question'])
-			$$("div#total").text(data['totals'])
-			$$("div#correct").text(data['corrects'])
-			// change colour according to level later on:
-			//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
-			$$("div#ratio").text(data['percent'])
-			$$("div#sensitivity").text(data['sensitivity'])
-			$$("div#specificity").text(data['specificity'])
-			$$("div#accuracy").text(data['accuracy'])
+			
+		chart_obj = new Chart(ctx).Bar(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
+		    animation: false
 		});
+		$$("div#legend").html(chart_obj.generateLegend())
+		$$("textarea#comments").text(data['comments']);
 
 	}
 
+	function update_chart(data) {
+		// Get the context of the canvas element we want to select
+
+		last_data = data;
+		console.log(data);
+		$$("h3#question").text(data['question'])
+		$$("div#total").text(data['totals'])
+		$$("div#correct").text(data['corrects'])
+		// change colour according to level later on:
+		//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
+		$$("div#ratio").text(data['percent'])
+		$$("div#sensitivity").text(data['sensitivity'])
+		$$("div#specificity").text(data['specificity'])
+		$$("div#accuracy").text(data['accuracy'])
+
+		console.log("update chart? " + $$("#display_toggle").prop('checked'));
+		if ($$("#display_toggle").prop('checked')) {
+			console.log("update chart");
+			display_chart(data);
+		}
+	}
+
+
 	$$(document).ready(function () {
-			update_chart()
+
+
+//				$$.getJSON("$data['get_url']", function (data) {
+
+			var source = new EventSource("$data['get_url']");
+			source.onmessage = function(event) {
+			    console.log("server update: " + event.data);
+			    update_chart(JSON.parse(event.data));
+			};
+
+			$$('#display_toggle').change(function() {
+				console.log($$(this).prop('checked'));
+				if ($$(this).prop('checked')) {
+      				document.getElementById("histogram").hidden = false;
+      				if (last_data != null)
+      					display_chart(last_data);
+      			} else {
+      				document.getElementById("histogram").hidden = true;
+
+      			}
+    		});
+
 		}
 	)
 </script>
@@ -35,6 +73,7 @@ $var title: QuickVote Results
 <div class="row clearfix">
 	<div class="col-md-3 column">
 		<div class="panel panel-default">
+
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">Stats</h3>
 		  	</div>
@@ -58,6 +97,9 @@ $var title: QuickVote Results
 				<div class="btn btn-success btn-lg btn-block" type="button">
 		  			Accuracy % <span class="badge"><div id="accuracy">-</div></span>
 				</div>
+				<div class="btn btn-primary btn-lg btn-block" type="button">
+		  			Total <span class="badge"><div id="total">-</div></span>
+				</div>
 				<div id="legend"></div>
 			</div>
 		</div>
@@ -65,15 +107,27 @@ $var title: QuickVote Results
 	<div class="col-md-9 column">
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
-		    	<h3 class="panel-title">Histogram</h3>
+		    	<h3 class="panel-title">
+		  		<div class="checkbox-inline">
+				  <label>
+				    <input id="display_toggle" type="checkbox" data-toggle="toggle">
+				    Histogram
+				  </label>
+				</div>
+
+
+		    	</h3>
 		  	</div>
 		  	<div class="panel-body">
 		  		<h3 id="question" class="panel-title">Question</h3>
+
+		  		<div id="histogram" >
 		  		<canvas style="padding: 0;
 								margin: auto;
 								display: block;
 								width: 700px;" id="resultChart" width="500" height="300"></canvas>
 				<textarea class="form-control" rows="3" id="comments"></textarea>
+				</div>
 		  	</div>
 		</div>
 	</div>
