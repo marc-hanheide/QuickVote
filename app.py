@@ -11,6 +11,7 @@ from threading import Condition
 import sys
 from os import _exit
 
+import time
 import config
 
 urls = {
@@ -362,18 +363,20 @@ class results:
         block = False
         web.header("Content-Type", "text/event-stream")
         web.header('Cache-Control', 'no-cache')
-        web.header('Content-length:', 0)
+        web.header('Content-length:', 1000)
         while True:
             new_input.acquire()
             try:
                 if block:
-                    new_input.wait(timeout=sys.maxint)
+                    new_input.wait(timeout=3)
             finally:
                 new_input.release()
             block = True
+            #time.sleep(1);
             data = self.compute_results(uuid)
             print "got results, yielding it now"
-            yield self.response(dumps(data))
+            r = self.response(dumps(data))
+            yield r
 
     def GET_old(self, uuid):
         print web.ctx.env
