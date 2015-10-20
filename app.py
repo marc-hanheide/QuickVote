@@ -275,10 +275,10 @@ class results:
 
             total_submissions = 0
             total_correct_submissions = 0
-            tp = 1.0
-            tn = 1.0
-            fp = 1.0
-            fn = 1.0
+            tp = 0.0
+            tn = 0.0
+            fp = 0.0
+            fn = 0.0
 
             for answer in answers:
                 correct = True
