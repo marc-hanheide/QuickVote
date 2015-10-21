@@ -310,12 +310,16 @@ class results:
                     if 'env' in answer:
                         if 'HTTP_USER_AGENT' in answer['env']:
                             ua = httpagentparser.detect(answer['env']['HTTP_USER_AGENT'])
-                            k = ua['platform']['name'] + " " + ua['browser']['name']
+                            try:
+                                k = ua['platform']['name']  #+ " / " + ua['browser']['name']
+                            except:
+                                k = "*unknown* / " + ua['browser']['name']
                             if k not in user_agents:
                                 user_agents[k] = 0
                             user_agents[k] += 1
                 except Exception as ex:
-                    print "couldn't work with HTTP_USER_AGENT: %s" % ex
+                    print "couldn't work with HTTP_USER_AGENT: %s %s" % (ex, answer['env']['HTTP_USER_AGENT'])
+                    print ua
                     pass
 
                 correct = True
