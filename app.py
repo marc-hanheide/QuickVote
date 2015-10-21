@@ -8,6 +8,7 @@ from uuid import uuid4
 from datetime import datetime
 from bson import json_util
 from threading import Condition
+import httpagentparser 
 import sys
 from os import _exit
 
@@ -264,6 +265,27 @@ class questions:
 
 class results:
 
+    def generate_user_results(self, user_agents):
+        try:
+            sorted_keys = user_agents.keys()
+            sorted_keys.sort()
+            dataset = {
+                'label': "user agents",
+                'fillColor': "rgba(0,0,120,0.5)",
+                'data': [user_agents[r] for r in sorted_keys]
+            }
+            data = {
+                'dummy': range(1, 2048),  # dummy data to stop proxy buffering
+                'labels':   sorted_keys,
+                'datasets': [dataset],
+            }
+        except Exception as e:
+            print e
+            pass
+
+        return data
+
+
     def compute_results(self, uuid):
         answers = qv_collection.find({'uuid': uuid})
         question = qv_questions.find_one({'uuid': uuid})
@@ -280,7 +302,22 @@ class results:
             fp = 0.0
             fn = 0.0
 
+            user_agents = {}
+
             for answer in answers:
+
+                try:
+                    if 'env' in answer:
+                        if 'HTTP_USER_AGENT' in answer['env']:
+                            ua = httpagentparser.detect(answer['env']['HTTP_USER_AGENT'])
+                            k = ua['platform']['name'] + " " + ua['browser']['name']
+                            if k not in user_agents:
+                                user_agents[k] = 0
+                            user_agents[k] += 1
+                except Exception as ex:
+                    print "couldn't work with HTTP_USER_AGENT: %s" % ex
+                    pass
+
                 correct = True
                 for opt in question['options']:
                     if opt not in results:
@@ -333,6 +370,7 @@ class results:
 
             data = {
                 'dummy': range(1, 2048),  # dummy data to stop proxy buffering
+                'userChart': self.generate_user_results(user_agents),
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
                 'comments': comments,

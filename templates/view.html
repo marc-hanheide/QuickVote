@@ -20,6 +20,17 @@ $var title: QuickVote Results
 
 	}
 
+	function display_user_chart(data) {
+		var ctx = document.getElementById("userChart").getContext("2d");
+
+			
+		chart_obj = new Chart(ctx).Bar(data['userChart'], {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
+		    animation: false
+		});
+
+	}
+
+
 	function update_chart(data) {
 		// Get the context of the canvas element we want to select
 
@@ -37,6 +48,7 @@ $var title: QuickVote Results
 		if ($$("#display_toggle").prop('checked')) {
 			display_chart(data);
 		}
+		display_user_chart(data);
 	}
 
 
@@ -106,7 +118,7 @@ $var title: QuickVote Results
 		  		<div class="checkbox-inline">
 				  <label>
 				    <input id="display_toggle" type="checkbox" data-toggle="toggle">
-				    Histogram
+				    Responses Plot
 				  </label>
 				</div>
 
@@ -120,10 +132,23 @@ $var title: QuickVote Results
 		  		<canvas style="padding: 0;
 								margin: auto;
 								display: block;
-								width: 700px;" id="resultChart" width="500" height="300"></canvas>
+								width: 600px;" id="resultChart" width="500" height="300"></canvas>
 				<textarea style="resize: none;overflow-y: scroll;" class="form-control" rows="3" id="comments"></textarea>
 				</div>
 		  	</div>
+	  	</div>
+		<div class="panel panel-default">
+		  	<div class="panel-heading">
+		    	<h3 class="panel-title">User Agents
+		    	</h3>
+		  	</div>
+		  	<div class="panel-body">
+		  		<canvas style="padding: 0;
+								margin: auto;
+								display: block;
+								width: 600px;" id="userChart" width="500" height="300"></canvas>
+		  	</div>
+
 		</div>
 	</div>
 </div>
