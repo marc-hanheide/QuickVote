@@ -8,7 +8,7 @@ from uuid import uuid4
 from datetime import datetime
 from bson import json_util
 from threading import Condition
-import httpagentparser 
+import httpagentparser
 import sys
 from os import _exit
 
@@ -26,9 +26,19 @@ urls = {
      'class': 'view',
      'method': 'get'
      },
-    'editor':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/qv/(.+)/(.+)/editor',
+    'editor':                           # arg1 is the domain
+    {'pattern': '/qv/(.+)/editor',
      'class': 'editor',
+     'method': 'get'
+     },
+    'login':                           # arg1 is the domain, arg2 the admin_url
+    {'pattern': '/qv/(.+)/(.+)/login',
+     'class': 'login',
+     'method': 'get'
+     },
+    'logoff':                           # arg1 is the domain, arg2 the admin_url
+    {'pattern': '/qv/(.+)/(.+)/logout',
+     'class': 'logoff',
      'method': 'get'
      },
     # API:
@@ -38,8 +48,8 @@ urls = {
      'method': 'post'
      },
     'question_post':                    # for POSTs to edit questions
-    {'pattern': '/qv/api/(.+)/(.+)/q',     # (uuid in payload)
-     'class': 'questions',              # arg1: domain, arg2: admin_url
+    {'pattern': '/qv/api/(.+)/q',     # (uuid in payload)
+     'class': 'questions',              # arg1: domain
      'method': 'post'
      },
     'question_get':                     # for GETs to retrieve question data
@@ -78,6 +88,11 @@ urls = {
 #     'correct': ['A, B']
 # }
 
+# the session UUID is used to determine 
+# if a client had already submitted an answer
+
+session_uuid = uuid4()
+admin_uuid = uuid4()
 
 client = MongoClient(config.mongo_host, config.mongo_port)
 
@@ -139,15 +154,23 @@ class domain_manager:
         true_name = self.get_name_from_admin_url(admin_url)
         return true_name == domain
 
+    def is_admin(self, domain):
+        c = web.cookies().get("quuid_" + domain)
+        if c is None:
+            return False
+        return self.is_valid_admin(domain, c)
+
     def get_active_question(self, domain):
         c = self.domain_coll.find_one({'name': domain})
         return c['active_question'] if c is not None else None
 
     def set_active_question(self, domain, uuid):
+        global session_uuid
         c = self.domain_coll.find_one({'name': domain})
         if c is None:
             raise RuntimeError('domain %s not in database' % domain)
         c['active_question'] = uuid
+        session_uuid = uuid4()
         self.domain_coll.save(c)
 
 
@@ -156,15 +179,27 @@ qv_domains = domain_manager(qv_db)
 
 ### Renderers for actual interface:
 class ask_question:
+
     def GET(self, domain):
         uuid = qv_domains.get_active_question(domain)
         qs = qv_questions.find_one({'uuid': uuid})
         data = {'qs': qs,
+                'session_uuid': session_uuid,
                 'submit_url': urls['user_post']['url_pattern'] % domain,
                 }
         return renderer.index(data)
 
     def POST(self, domain):
+        # verify the cookie is not set to the current session.
+        # in that case it would be a resubmission
+        c = web.cookies(session_uuid=uuid4()).session_uuid
+        if str(c) == str(session_uuid):
+            print "user submitted again to same session"
+            return renderer.duplicate(urls['user']['url_pattern']
+                                   .replace('$', '') % domain)
+        else:
+            web.setcookie('session_uuid', session_uuid, 3600)
+
         data = {}
         data.update(web.input())
         data['env'] = {}
@@ -182,10 +217,28 @@ class ask_question:
                                .replace('$', '') % domain)
 
 
-class editor:
+class login:
 
     def GET(self, domain, admin_url):
         if not qv_domains.is_valid_admin(domain, admin_url):
+            return web.notacceptable()
+        web.setcookie("quuid_"+domain, admin_url)
+        return web.ok()
+
+
+class logoff:
+
+    def GET(self, domain, admin_url):
+        if not qv_domains.is_valid_admin(domain, admin_url):
+            return web.notacceptable()
+        web.setcookie("quuid_"+domain, admin_url, expires=-1)
+        return web.ok()
+
+
+class editor:
+
+    def GET(self, domain):
+        if not qv_domains.is_admin(domain):
             return web.notacceptable()
         qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
 
@@ -194,7 +247,7 @@ class editor:
             'new_uuid': uuid4(),
             'domain': domain,
             'submit_url': urls['question_post']['url_pattern']
-            % (domain, admin_url),
+            % (domain),
             'get_url': urls['question_get']['url_pattern'] % (domain, ''),
             'results_url': urls['view']['url_pattern'] % (domain),
         }
@@ -209,12 +262,20 @@ class editor:
 class view:
 
     def GET(self, domain):
+        # verify the cookie is not set to the current session.
+        # in that case it would be a resubmission
+        if not qv_domains.is_admin(domain):
+            return web.notacceptable()
+
+
+
         uuid = qv_domains.get_active_question(domain)
         data = {
             'uuid': uuid,
             'domain': domain,
             'get_url': urls['results_get']['url_pattern'] % (uuid)
         }
+
         return renderer.view(data)
 
 
@@ -222,8 +283,8 @@ class view:
 
 class questions:
 
-    def POST(self, domain, admin_url):
-        if not qv_domains.is_valid_admin(domain, admin_url):
+    def POST(self, domain):
+        if not qv_domains.is_admin(domain):
             return web.notacceptable()
 
         user_data = web.input()
@@ -284,7 +345,6 @@ class results:
             pass
 
         return data
-
 
     def compute_results(self, uuid):
         answers = qv_collection.find({'uuid': uuid})

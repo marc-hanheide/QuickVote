@@ -6,12 +6,18 @@ $var title: QuickVote.
 	<div class="col-md-12 column">
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
-		    	<h3 class="panel-title">$data['qs']['question']</h3>
+		    	<h3 class="panel-title">
+		    		<button class="btn btn-warning"
+		    		        onclick="location.reload();">Update
+		    		</button>
+		    		$data['qs']['question'] 
+		    	</h3>
 		  	</div>
 		  	<div class="panel-body">
 				<form class="form" role="form" action="submit" method="post">
 					<input name="question" type="hidden" value="$data['qs']['question']">
 					<input name="uuid" type="hidden" value="$data['qs']['uuid']">
+					<input name="session_uuid" type="hidden" value="$data['session_uuid']">
 					<input name="domain" type="hidden" value="$data['qs']['domain']">
 			  		<div class="form-group">
 						$for answer in data['qs']['options']:
