@@ -110,6 +110,17 @@ $var title: QuickVote Results
 				<div id="legend"></div>
 			</div>
 		</div>
+		<div class="panel panel-default">
+
+		  	<div class="panel-heading">
+		    	<h3 class="panel-title">QR Code</h3>
+		  	</div>
+		  	<div class="panel-body">
+		  		<a href="https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=$data['vote_url']">
+		  			<img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=$data['vote_url']" alt="QR code" width="100%">
+		  		</a>
+		  	</div>
+	  	</div>
 	</div>
 	<div class="col-md-9 column">
 		<div class="panel panel-default">
@@ -150,5 +161,6 @@ $var title: QuickVote Results
 		  	</div>
 
 		</div>
+
 	</div>
 </div>

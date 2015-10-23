@@ -277,6 +277,7 @@ class view:
         data = {
             'uuid': uuid,
             'domain': domain,
+            'vote_url': config.base_url+domain,
             'get_url': urls['results_get']['url_pattern'] % (uuid)
         }
 
