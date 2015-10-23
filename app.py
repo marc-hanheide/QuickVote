@@ -443,16 +443,16 @@ class results:
             try:
                 sensitivity = tp / (tp + fn)
             except:
-                sensitivity = 0
+                sensitivity = 1
 
             try:
                 specificity = tn / (tn + fp)
             except:
-                specificity = 0
+                specificity = 1
             try:
                 accuracy = (tp + tn) / (tp + tn + fp + fn)
             except:
-                accuracy = 0
+                accuracy = 1
 
             data = {
                 'dummy': range(1, 2048),  # dummy data to stop proxy buffering
