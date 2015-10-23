@@ -440,9 +440,19 @@ class results:
                 if r in question['correct'] else 0) for r in sorted_keys]
             }
 
-            sensitivity = tp / (tp + fn)
-            specificity = tn / (tn + fp)
-            accuracy = (tp + tn) / (tp + tn + fp + fn)
+            try:
+                sensitivity = tp / (tp + fn)
+            except:
+                sensitivity = 0
+
+            try:
+                specificity = tn / (tn + fp)
+            except:
+                specificity = 0
+            try:
+                accuracy = (tp + tn) / (tp + tn + fp + fn)
+            except:
+                accuracy = 0
 
             data = {
                 'dummy': range(1, 2048),  # dummy data to stop proxy buffering
