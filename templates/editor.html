@@ -14,6 +14,14 @@ $var title: QuickVote Editor (Admin)
 
 		});
 	}
+
+	function delete_answers() {
+		var question_uuid = $$("#uuid").val();
+		console.log("delete all answers for " + question_uuid)
+		$$.post("$data['delete_url']" + question_uuid);
+	}
+
+
 	function new_question() {
 		$$("#uuid").val("$data['new_uuid']");
 		$$("#domain").val("$data['domain']");
@@ -50,26 +58,31 @@ $var title: QuickVote Editor (Admin)
   	<div class="panel-body">
 
 		<div class="col-md-3">
-			<div class="btn-group">
-				 
-				<button class="btn btn-default">
-					Question
-				</button> 
-				<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
-					<span class="caret"></span>
-				</button>
-				<ul class="dropdown-menu">
-					<li>
-						<a onclick="new_question();" href="#">New</a>
-					</li>
-					<li class="divider">
-					$for q in data['existing_questions']:
-						</li>
-						<li>
-							<a onclick="choose(this);" id="$q['uuid']" href="#">$q['question']</a>
-						</li>
-				</ul>
-			</div>
+			<div class="panel panel-default">
+			  	<div class="panel-heading">
+
+					<div class="btn-group"> 
+						<button class="btn btn-default">
+							Question
+						</button> 
+						<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu">
+							<li>
+								<a onclick="new_question();" href="#">New</a>
+							</li>
+							<li class="divider">
+							$for q in data['existing_questions']:
+								</li>
+								<li>
+									<a onclick="choose(this);" id="$q['uuid']" href="#">$q['question']</a>
+								</li>
+						</ul>
+					</div>
+			  	</div>
+			  	<div class="panel-body">
+
 <!--  			<div class="btn-group">
 
 				<button class="btn btn-default" type="button">
@@ -82,12 +95,29 @@ $var title: QuickVote Editor (Admin)
 					<em class="glyphicon glyphicon-align-justify"></em> Justify
 				</button>
 			</div>
- --> 			<div class="btn-group" role="group">
-				<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
-					Show Results
-				</a> 
+ -->
+  			
+					<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
+						Show Results
+					</a> 
+					
+				</div>
+			</div>
+			<div class="panel panel-default">
+			  	<div class="panel-heading">
+					<h4>Delete answers</h4>
+			  	</div>
+
+			
+			  	<div class="panel-body">
+					<button onclick="delete_answers();" class="btn btn-danger btn-block" type="button">
+						Delete all Answers
+					</button> 
+				</div>
 			</div>
 		</div>
+
+
 		<div class="col-md-9">
 			<form role="form" id="editform">
 				<div class="form-group">

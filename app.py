@@ -47,6 +47,11 @@ urls = {
      'class': 'ask_question',
      'method': 'post'
      },
+    'answers_post':                     # arg1 is the domain (POST only)
+    {'pattern': '/qv/api/(.+)/(.+)',    # arg2 is the question UUID
+     'class': 'answers',
+     'method': 'post'
+     },
     'question_post':                    # for POSTs to edit questions
     {'pattern': '/qv/api/(.+)/q',     # (uuid in payload)
      'class': 'questions',              # arg1: domain
@@ -196,7 +201,7 @@ class ask_question:
         if str(c) == str(session_uuid):
             print "user submitted again to same session"
             return renderer.duplicate(urls['user']['url_pattern']
-                                   .replace('$', '') % domain)
+                                      .replace('$', '') % domain)
         else:
             web.setcookie('session_uuid', session_uuid, 3600)
 
@@ -249,6 +254,7 @@ class editor:
             'submit_url': urls['question_post']['url_pattern']
             % (domain),
             'get_url': urls['question_get']['url_pattern'] % (domain, ''),
+            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
             'results_url': urls['view']['url_pattern'] % (domain),
         }
 
@@ -267,8 +273,6 @@ class view:
         if not qv_domains.is_admin(domain):
             return web.notacceptable()
 
-
-
         uuid = qv_domains.get_active_question(domain)
         data = {
             'uuid': uuid,
@@ -280,6 +284,14 @@ class view:
 
 
 ## API access points
+class answers:
+
+    def POST(self, domain, question):
+        if not qv_domains.is_admin(domain):
+            return web.notacceptable()
+        qv_collection.remove({'uuid': question, 'domain': domain})
+        return web.ok()
+
 
 class questions:
 

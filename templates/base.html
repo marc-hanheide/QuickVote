@@ -4,6 +4,10 @@ $def with (page, vars=None)
 	<head>
 		<meta charset="utf-8">
 		<title>$page.title</title>
+
+		<link rel="icon" href="/static/favicon.ico" type="image/x-icon" /> 
+		<link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta name="author" content="Marc Hanheide">
 		<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
@@ -22,8 +26,31 @@ $def with (page, vars=None)
 	</head>
 
 	<body>
+		<nav class="navbar navbar-default">
+		  	<div class="container-fluid">
+	    		<div class="navbar-header">
+	      			<div class="navbar-brand" onclick="location.reload();">
+	        			<img alt="QV" src="/static/qv_logo.png" height="32px">QuickVote
+	        			<button class="btn btn-warning"
+		    		        onclick="location.reload();">Reload 
+	    				</button>
+
+	      			</div>
+
+	    		</div>
+	  		</div>
+		</nav>
 		<div class="container">
 			$:page   
 		</div>
+	    <footer class="footer">
+      		<div class="container">
+      			<small>
+        			<p class="text-muted">QuickVote, &copy; Marc Hanheide 2015, <br/><a href="https://github.com/marc-hanheide/QuickVote">https://github.com/marc-hanheide/QuickVote</a></p>
+    			</small>
+      		</div>
+    	</footer>
+
+
 	</body>
 </html>
