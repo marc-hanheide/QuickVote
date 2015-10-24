@@ -107,6 +107,7 @@ qv_db = client['QuickVote']
 
 qv_collection = qv_db['answers']
 qv_collection.create_index('uuid')
+qv_collection.create_index('session')
 qv_collection.create_index('domain')
 qv_collection.create_index('inserted_at')
 
