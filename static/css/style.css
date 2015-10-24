@@ -2,3 +2,9 @@
   border: 1px solid #eee;
   height: auto;
 }
+
+.scrollable-menu {
+    height: auto;
+    max-height: 300px;
+    overflow-x: hidden;
+}

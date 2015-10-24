@@ -251,6 +251,7 @@ class editor:
             'existing_questions': [],
             'new_uuid': uuid4(),
             'domain': domain,
+            'active_question': qv_domains.get_active_question(domain),
             'submit_url': urls['question_post']['url_pattern']
             % (domain),
             'get_url': urls['question_get']['url_pattern'] % (domain, ''),
@@ -306,6 +307,10 @@ class questions:
            hasattr(user_data, 'question') and \
            hasattr(user_data, 'domain') and \
            hasattr(user_data, 'uuid'):
+            if user_data.uuid == '':
+                user_data.uuid = str(uuid4())
+            if user_data.domain == '':
+                user_data.domain = str(domain)
             options_str = user_data.options.split(',')
             correct_str = user_data.correct.split(',')
             doc = {
