@@ -45,14 +45,24 @@ $var title: QuickVote Editor (Admin)
 
 	}
 
-	function delete_answers() {
+	// function delete_answers() {
+	// 	var question_uuid = $$("#uuid").val();
+	// 	console.log("delete all answers for " + question_uuid)
+	// 	$$.post("$data['delete_url']" + question_uuid, function(data) {
+	// 		choose(question_uuid);
+	// 	});
+
+	// }
+
+	function new_session() {
 		var question_uuid = $$("#uuid").val();
-		console.log("delete all answers for " + question_uuid)
+		console.log("new session for " + question_uuid)
 		$$.post("$data['delete_url']" + question_uuid, function(data) {
 			choose(question_uuid);
 		});
 
 	}
+
 
 
 	function new_question() {
@@ -140,6 +150,7 @@ $var title: QuickVote Editor (Admin)
 					<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
 						Show Results
 					</a> 
+
 					
 				</div>
 			</div>
@@ -170,8 +181,8 @@ $var title: QuickVote Editor (Admin)
 					<div class="btn btn-success  btn-block" type="button">
 			  			Accuracy % <span class="badge"><div id="accuracy">-</div></span>
 					</div>
-					<button onclick="delete_answers();" class="btn btn-danger btn-block" type="button">
-						Delete all Responses
+					<button onclick="new_session();" class="btn btn-danger btn-block" type="button">
+						Start New Session
 					</button> 
 				</div>
 			</div>

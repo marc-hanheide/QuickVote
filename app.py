@@ -62,8 +62,8 @@ urls = {
      'class': 'questions',
      'method': 'get'
      },
-    'results_get':                      # GET: arg1 is uuid of the question
-    {'pattern': '/qv/api/r/(.+)',
+    'results_get':                      # GET: arg2 is uuid of the question
+    {'pattern': '/qv/api/(.+)/r/(.+)',
      'class': 'results',
      'method': 'get'
      }
@@ -282,7 +282,7 @@ class editor:
             % (domain),
             'get_url': urls['question_get']['url_pattern'] % (domain, ''),
             'get_results_url': urls['results_get']['url_pattern']
-            % '',
+            % (domain, ''),
             'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
             'results_url': urls['view']['url_pattern'] % (domain),
         }
@@ -307,7 +307,7 @@ class view:
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (uuid)
+            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
         }
 
         return renderer.view(data)
@@ -319,7 +319,8 @@ class answers:
     def POST(self, domain, question):
         if not qv_domains.is_admin(domain):
             return web.notacceptable()
-        qv_collection.remove({'uuid': question, 'domain': domain})
+        qv_domains.set_active_session(domain, question)
+        #qv_collection.remove({'uuid': question, 'domain': domain})
         return web.ok()
 
 
@@ -392,8 +393,9 @@ class results:
 
         return data
 
-    def compute_results(self, uuid):
-        answers = qv_collection.find({'uuid': uuid})
+    def compute_results(self, domain, uuid):
+        session = qv_domains.get_active_session(domain, uuid)
+        answers = qv_collection.find({'uuid': uuid, 'session': session})
         question = qv_questions.find_one({'uuid': uuid})
 
         results = {}
@@ -521,7 +523,7 @@ class results:
         response = "data: " + data + "\n\n"
         return response
 
-    def GET(self, uuid):
+    def GET(self, domain, uuid):
         block = False
         web.header("Content-Type", "text/event-stream")
         web.header('Cache-Control', 'no-cache')
@@ -535,7 +537,7 @@ class results:
                 new_input.release()
             block = True
             #time.sleep(1);
-            data = self.compute_results(uuid)
+            data = self.compute_results(domain, uuid)
             r = self.response(dumps(data))
             yield r
 
