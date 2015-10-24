@@ -175,9 +175,33 @@ class domain_manager:
         if c is None:
             raise RuntimeError('domain %s not in database' % domain)
         c['active_question'] = uuid
-        session_uuid = uuid4()
         self.domain_coll.save(c)
+        session_uuid = self.get_active_session(domain, uuid)
 
+    def set_active_session(self, domain, quuid, suuid=None):
+        global session_uuid
+        c = self.domain_coll.find_one({'name': domain})
+        if c is None:
+            raise RuntimeError('domain %s not in database' % domain)
+        if 'session' not in c:
+            print "NOT IN YET"
+            c['session'] = {}
+        if suuid is None:
+            suuid = str(uuid4())
+        c['session'][quuid] = suuid
+        session_uuid = suuid
+        self.domain_coll.save(c)
+        return suuid
+
+    def get_active_session(self, domain, quuid):
+        c = self.domain_coll.find_one({'name': domain})
+        if 'session' not in c:
+            c['session'] = {}
+
+        if quuid not in c['session']:
+            return self.set_active_session(domain, quuid)
+
+        return c['session'][quuid]
 
 qv_domains = domain_manager(qv_db)
 
@@ -212,6 +236,8 @@ class ask_question:
             if type(v) is str:
                 data['env'][k.replace('.', '_')] = v
         data['inserted_at'] = datetime.now()
+        data['session'] = qv_domains.get_active_session(domain,
+                                                        data['uuid'])
         new_input.acquire()
         try:
             qv_collection.insert(data)
