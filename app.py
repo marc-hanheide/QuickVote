@@ -255,6 +255,8 @@ class editor:
             'submit_url': urls['question_post']['url_pattern']
             % (domain),
             'get_url': urls['question_get']['url_pattern'] % (domain, ''),
+            'get_results_url': urls['results_get']['url_pattern']
+            % '',
             'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
             'results_url': urls['view']['url_pattern'] % (domain),
         }
@@ -354,7 +356,7 @@ class results:
                 'data': [user_agents[r] for r in sorted_keys]
             }
             data = {
-                'dummy': range(1, 2048),  # dummy data to stop proxy buffering
+                'dummy': config.dummy_data,
                 'labels':   sorted_keys,
                 'datasets': [dataset],
             }
@@ -459,9 +461,13 @@ class results:
                 accuracy = (tp + tn) / (tp + tn + fp + fn)
             except:
                 accuracy = 1
+            try:
+                corrects_ratio = total_correct_submissions / total_submissions
+            except:
+                corrects_ratio = 1
 
             data = {
-                'dummy': range(1, 2048),  # dummy data to stop proxy buffering
+                'dummy': config.dummy_data,
                 'userChart': self.generate_user_results(user_agents),
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
@@ -469,7 +475,7 @@ class results:
                 'totals': total_submissions,
                 'corrects': total_correct_submissions,
                 'percent': "%2.1f%%"
-                % (total_correct_submissions * 100.0 / total_submissions),
+                % (corrects_ratio * 100.0),
                 'sensitivity': "%2.1f%%"
                 % (sensitivity * 100.0),
                 'specificity': "%2.1f%%"

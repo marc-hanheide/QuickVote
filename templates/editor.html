@@ -3,6 +3,25 @@ $def with (data)
 $var title: QuickVote Editor (Admin)
 
 <script type="text/javascript">
+
+	results_source = null;
+
+	function update_results(data) {
+		// Get the context of the canvas element we want to select
+
+		$$("div#total").text(data['totals']);
+		$$("div#correct").text(data['corrects']);
+		// change colour according to level later on:
+		//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
+		$$("div#ratio").text(data['percent']);
+		$$("div#sensitivity").text(data['sensitivity']);
+		$$("div#specificity").text(data['specificity']);
+		$$("div#accuracy").text(data['accuracy']);
+
+
+	}
+
+
 	function choose(id) {
 		$$.getJSON("$data['get_url']" + id, function(data) {
 			$$("#uuid").val(data['uuid']);
@@ -11,13 +30,28 @@ $var title: QuickVote Editor (Admin)
 			$$("#options").val(data['options']);
 			$$("#correct").val(data['correct']);
 			$$("#active_question").text(data['question'].substring(0,16));
+
+			if (results_source != null) {
+				results_source.close();
+			}
+			results_source = new EventSource("$data['get_results_url']" + data['uuid']);
+
+			results_source.onmessage = function(event) {
+			    update_results(JSON.parse(event.data));
+			};
+
+
 		});
+
 	}
 
 	function delete_answers() {
 		var question_uuid = $$("#uuid").val();
 		console.log("delete all answers for " + question_uuid)
-		$$.post("$data['delete_url']" + question_uuid);
+		$$.post("$data['delete_url']" + question_uuid, function(data) {
+			choose(question_uuid);
+		});
+
 	}
 
 
@@ -49,6 +83,7 @@ $var title: QuickVote Editor (Admin)
 	$$(document).ready(function () {
 		if ("$data['active_question']" != "")
 			choose("$data['active_question']");
+
 	});
 
 
@@ -75,13 +110,13 @@ $var title: QuickVote Editor (Admin)
 						</button>
 						<ul class="dropdown-menu scrollable-menu">
 							<li>
-								<a onclick="new_question();" href="#">New</a>
+								<a onclick="new_question();">New</a>
 							</li>
 							<li class="divider">
 							$for q in data['existing_questions']:
 								</li>
 								<li>
-									<a onclick="choose(this.id);" id="$q['uuid']" href="#">$q['question']</a>
+									<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
 								</li>
 						</ul>
 					</div>
@@ -108,23 +143,48 @@ $var title: QuickVote Editor (Admin)
 					
 				</div>
 			</div>
-			<div class="panel panel-default">
-			  	<div class="panel-heading">
-					<h4>Delete answers</h4>
-			  	</div>
 
-			
+
+			<div class="panel panel-default">
+
+			  	<div class="panel-heading">
+			    	<h3 class="panel-title">Responses</h3>
+			  	</div>
 			  	<div class="panel-body">
+
+					<div class="btn btn-primary  btn-block" type="button">
+			  			Total <span class="badge"><div id="total">-</div></span>
+					</div>
+					<div class="btn btn-success  btn-block" type="button">
+			  			Correct <span class="badge"><div id="correct">-</div></span>
+					</div>
+					<div class="btn btn-success  btn-block" type="button">
+			  			Correct % <span class="badge"><div id="ratio">-</div></span>
+					</div>
+					<div class="btn btn-success  btn-block" type="button">
+			  			Sensitivity % <span class="badge"><div id="sensitivity">-</div></span>
+					</div>
+					<div class="btn btn-success  btn-block" type="button">
+			  			Specificity % <span class="badge"><div id="specificity">-</div></span>
+					</div>
+					<div class="btn btn-success  btn-block" type="button">
+			  			Accuracy % <span class="badge"><div id="accuracy">-</div></span>
+					</div>
 					<button onclick="delete_answers();" class="btn btn-danger btn-block" type="button">
-						Delete all Answers
+						Delete all Responses
 					</button> 
 				</div>
 			</div>
+
+
+
+
 		</div>
 
 
 		<div class="col-md-9">
 			<form role="form" id="editform">
+				<small>
 				<div class="form-group">
 					 
 					<label for="uuid">
@@ -139,6 +199,7 @@ $var title: QuickVote Editor (Admin)
 					</label>
 					<input type="text" readonly="readonly" class="form-control" name="domain" id="domain" />
 				</div>
+				</small>
 				<div class="form-group">
 					 
 					<label for="question">
