@@ -26,6 +26,11 @@ urls = {
      'class': 'view',
      'method': 'get'
      },
+    'small':                             # arg1 is the domain
+    {'pattern': '/qv/(.+)/small',
+     'class': 'small',
+     'method': 'get'
+     },
     'history':                             # arg1 is the domain
     {'pattern': '/qv/(.+)/history',
      'class': 'history',
@@ -317,6 +322,25 @@ class view:
         }
 
         return renderer.view(data)
+
+
+class small:
+
+    def GET(self, domain):
+        # verify the cookie is not set to the current session.
+        # in that case it would be a resubmission
+        if not qv_domains.is_admin(domain):
+            return web.notacceptable()
+
+        uuid = qv_domains.get_active_question(domain)
+        data = {
+            'uuid': uuid,
+            'domain': domain,
+            'vote_url': config.base_url+domain+'/',
+            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+        }
+
+        return renderer.small(data)
 
 
 class history:

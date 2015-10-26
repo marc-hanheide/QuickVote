@@ -1,0 +1,56 @@
+$def with (data)
+
+$var title: QuickVote Results
+
+
+<script type="text/javascript">
+
+
+	function update_chart(data) {
+		// Get the context of the canvas element we want to select
+
+		$$("h3#question").text(data['question'])
+		$$("div#total").text(data['totals'])
+		$$("div#correct").text(data['corrects'])
+		// change colour according to level later on:
+		//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
+		$$("div#ratio").text(data['percent'])
+	}
+
+
+	$$(document).ready(function () {
+
+
+//				$$.getJSON("$data['get_url']", function (data) {
+
+			var source = new EventSource("$data['get_url']");
+			source.onmessage = function(event) {
+			    update_chart(JSON.parse(event.data));
+			};
+
+		}
+	)
+</script>
+
+<div class="row clearfix">
+	<div class="col-md-12 column">
+		<div class="panel panel-default">
+
+		  	<div class="panel-heading">
+		  		<h3 id="question" class="panel-title">Question</h3>
+		  	</div>
+		  	<div class="panel-body">
+
+				<div class="btn btn-primary btn-lg btn-block" type="button">
+		  			Total <span class="badge"><div id="total">-</div></span>
+				</div>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Correct <span class="badge"><div id="correct">-</div></span>
+				</div>
+				<div class="btn btn-success btn-lg btn-block" type="button">
+		  			Correct % <span class="badge"><div id="ratio">-</div></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
