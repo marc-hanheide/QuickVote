@@ -26,6 +26,11 @@ urls = {
      'class': 'view',
      'method': 'get'
      },
+    'history':                             # arg1 is the domain
+    {'pattern': '/qv/(.+)/history',
+     'class': 'history',
+     'method': 'get'
+     },
     'editor':                           # arg1 is the domain
     {'pattern': '/qv/(.+)/editor',
      'class': 'editor',
@@ -48,7 +53,7 @@ urls = {
      'method': 'post'
      },
     'answers_post':                     # arg1 is the domain (POST only)
-    {'pattern': '/qv/api/(.+)/(.+)',    # arg2 is the question UUID
+    {'pattern': '/qv/api/(.+)/a/(.+)',    # arg2 is the question UUID
      'class': 'answers',
      'method': 'post'
      },
@@ -62,7 +67,7 @@ urls = {
      'class': 'questions',
      'method': 'get'
      },
-    'results_get':                      # GET: arg2 is uuid of the question
+    'results_get':                      # arg1 is domain, arg 2 uuid of question
     {'pattern': '/qv/api/(.+)/r/(.+)',
      'class': 'results',
      'method': 'get'
@@ -314,6 +319,26 @@ class view:
         return renderer.view(data)
 
 
+class history:
+
+    def GET(self, domain):
+        # verify the cookie is not set to the current session.
+        # in that case it would be a resubmission
+        if not qv_domains.is_admin(domain):
+            return web.notacceptable()
+
+        uuid = qv_domains.get_active_question(domain)
+        data = {
+            'uuid': uuid,
+            'domain': domain,
+            'vote_url': config.base_url+domain+'/',
+            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+        }
+
+        return renderer.history(data)
+
+
+
 ## API access points
 class answers:
 
@@ -384,7 +409,6 @@ class results:
                 'data': [user_agents[r] for r in sorted_keys]
             }
             data = {
-                'dummy': config.dummy_data,
                 'labels':   sorted_keys,
                 'datasets': [dataset],
             }
@@ -394,8 +418,9 @@ class results:
 
         return data
 
-    def compute_results(self, domain, uuid):
-        session = qv_domains.get_active_session(domain, uuid)
+    def compute_results(self, domain, uuid, session=None):
+        if session is None:
+            session = qv_domains.get_active_session(domain, uuid)
         answers = qv_collection.find({'uuid': uuid, 'session': session})
         question = qv_questions.find_one({'uuid': uuid})
 
@@ -496,13 +521,18 @@ class results:
                 corrects_ratio = 1
 
             data = {
-                'dummy': config.dummy_data,
                 'userChart': self.generate_user_results(user_agents),
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
                 'comments': comments,
                 'totals': total_submissions,
                 'corrects': total_correct_submissions,
+                'raw_stats': {
+                    'percent': corrects_ratio,
+                    'sensitivity': sensitivity,
+                    'specificity': specificity,
+                    'accuracy': accuracy
+                },
                 'percent': "%2.1f%%"
                 % (corrects_ratio * 100.0),
                 'sensitivity': "%2.1f%%"
@@ -525,6 +555,19 @@ class results:
         return response
 
     def GET(self, domain, uuid):
+        w = web.input()
+        mode = 'stream'
+        if 'mode' in w:
+            mode = w['mode']
+
+        method_name = 'GET_' + str(mode)
+        # Get the method from 'self'. Default to a lambda.
+        method = getattr(self, method_name, self.GET_stream)
+        print method
+        # Call the method as we return it
+        return method(domain, uuid)
+
+    def GET_stream(self, domain, uuid):
         block = False
         web.header("Content-Type", "text/event-stream")
         web.header('Cache-Control', 'no-cache')
@@ -539,8 +582,69 @@ class results:
             block = True
             #time.sleep(1);
             data = self.compute_results(domain, uuid)
+            data['dummy'] = config.dummy_data
+
             r = self.response(dumps(data))
             yield r
+
+    def GET_history(self, domain, uuid):
+        web.header('Content-Type', 'application/json')
+        sessions = qv_collection.distinct('session', {'uuid': uuid})
+        results = {}
+        last_inserted = {}
+        for s in sessions:
+            answers = qv_collection.find({'session': s,
+                                          'uuid': uuid})\
+                .sort([('inserted_at', -1)])
+            last_inserted[s] = answers[0]['inserted_at']
+            results[s] = self.compute_results(domain, uuid, s)
+
+        # sort according to time
+        decorated = [(last_inserted[s], s) for s in sessions]
+        decorated.sort()
+        sessions = [s for l, s in decorated]
+
+        totals_data = []
+        corrects_data = []
+        for s in sessions:
+            totals_data.append(results[s]['totals'])
+            corrects_data.append(results[s]['corrects'])
+
+        dataset_totals = {
+            'label': 'Totals',
+            'fillColor': "rgba(0,0,220,0.2)",
+            'strokeColor': "rgba(220,220,220,1)",
+            'pointColor': "rgba(220,220,220,1)",
+            'pointStrokeColor': "#fff",
+            'pointHighlightFill': "#fff",
+            'pointHighlightStroke': "rgba(220,220,220,1)",
+            'data': totals_data
+        }
+
+        dataset_corrects = {
+            'label': 'Correct',
+            'fillColor': "rgba(0,220,0,0.2)",
+            'strokeColor': "rgba(220,220,220,1)",
+            'pointColor': "rgba(220,220,220,1)",
+            'pointStrokeColor': "#fff",
+            'pointHighlightFill': "#fff",
+            'pointHighlightStroke': "rgba(220,220,220,1)",
+            'data': corrects_data
+        }
+
+        data = {
+            'labels': [str(last_inserted[s].date()) for s in sessions],
+            'datasets': [dataset_totals, dataset_corrects]
+        }
+
+        # dataset = {
+        #     'label': "responses",
+        #     'fillColor': "rgba(120,0,0,0.5)",
+        #     'data': [results[r] for r in sorted_keys]
+        # }
+
+        return dumps(data, default=json_util.default)
+
 
 
                     # var data = {
