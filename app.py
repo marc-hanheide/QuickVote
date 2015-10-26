@@ -1,3 +1,12 @@
+import sys
+import os
+abspath = os.path.dirname(__file__)
+print abspath
+
+if len(abspath) > 0:
+    sys.path.append(abspath)
+    os.chdir(abspath)
+
 #from flask import Flask, render_template, request, jsonify, Blueprint
 
 import web
@@ -9,7 +18,6 @@ from datetime import datetime
 from bson import json_util
 from threading import Condition
 import httpagentparser
-import sys
 from os import _exit
 
 import time
@@ -17,63 +25,63 @@ import config
 
 urls = {
     'user':                             # arg1 is the domain (questionnaire)
-    {'pattern': '/qv/(.+)/$',
+    {'pattern': '/(.+)/$',
      'class': 'ask_question',
      'method': 'get'
      },
     'view':                             # arg1 is the domain
-    {'pattern': '/qv/(.+)/view',
+    {'pattern': '/(.+)/view',
      'class': 'view',
      'method': 'get'
      },
     'small':                             # arg1 is the domain
-    {'pattern': '/qv/(.+)/small',
+    {'pattern': '/(.+)/small',
      'class': 'small',
      'method': 'get'
      },
     'history':                             # arg1 is the domain
-    {'pattern': '/qv/(.+)/history',
+    {'pattern': '/(.+)/history',
      'class': 'history',
      'method': 'get'
      },
     'editor':                           # arg1 is the domain
-    {'pattern': '/qv/(.+)/editor',
+    {'pattern': '/(.+)/editor',
      'class': 'editor',
      'method': 'get'
      },
     'login':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/qv/(.+)/(.+)/login',
+    {'pattern': '/(.+)/(.+)/login',
      'class': 'login',
      'method': 'get'
      },
     'logoff':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/qv/(.+)/(.+)/logout',
+    {'pattern': '/(.+)/(.+)/logout',
      'class': 'logoff',
      'method': 'get'
      },
     # API:
     'user_post':                        # arg1 is the domain (POST only)
-    {'pattern': '/qv/api/(.+)/a',
+    {'pattern': '/api/(.+)/a',
      'class': 'ask_question',
      'method': 'post'
      },
     'answers_post':                     # arg1 is the domain (POST only)
-    {'pattern': '/qv/api/(.+)/a/(.+)',    # arg2 is the question UUID
+    {'pattern': '/api/(.+)/a/(.+)',    # arg2 is the question UUID
      'class': 'answers',
      'method': 'post'
      },
     'question_post':                    # for POSTs to edit questions
-    {'pattern': '/qv/api/(.+)/q',     # (uuid in payload)
+    {'pattern': '/api/(.+)/q',     # (uuid in payload)
      'class': 'questions',              # arg1: domain
      'method': 'post'
      },
     'question_get':                     # for GETs to retrieve question data
-    {'pattern': '/qv/api/(.+)/q/(.+)',  # arg1 is domain, arg 2 uuid of question
+    {'pattern': '/api/(.+)/q/(.+)',  # arg1 is domain, arg 2 uuid of question
      'class': 'questions',
      'method': 'get'
      },
     'results_get':                      # arg1 is domain, arg 2 uuid of question
-    {'pattern': '/qv/api/(.+)/r/(.+)',
+    {'pattern': '/api/(.+)/r/(.+)',
      'class': 'results',
      'method': 'get'
      }
@@ -133,13 +141,15 @@ class QuickVoteApp(web.application):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', config.listen_port))
 
-
-app = QuickVoteApp((), globals())
+if __name__ == '__main__':
+    app = QuickVoteApp((), globals())
+else:
+    app = web.application(urls, globals(), autoreload=False)
 
 for v in urls.values():
     app.add_mapping(v['pattern'], v['class'])
-    v['url_pattern'] = v['pattern'].replace('(.+)', '%s')
-    print '(%s, %s)' % (v['pattern'], v['class'])
+    v['url_pattern'] = '../'+v['pattern'][1:].replace('(.+)', '%s')
+    print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
 
 
 class domain_manager:
@@ -235,7 +245,7 @@ class ask_question:
         c = web.cookies(session_uuid=uuid4()).session_uuid
         if str(c) == str(session_uuid):
             print "user submitted again to same session"
-            return renderer.duplicate(urls['user']['url_pattern']
+            return renderer.duplicate('../' + urls['user']['url_pattern']
                                       .replace('$', '') % domain)
         else:
             web.setcookie('session_uuid', session_uuid, 3600)
@@ -255,7 +265,7 @@ class ask_question:
             new_input.notifyAll()
         finally:
             new_input.release()
-        return renderer.submit(urls['user']['url_pattern']
+        return renderer.submit('../' + urls['user']['url_pattern']
                                .replace('$', '') % domain)
 
 
@@ -671,32 +681,6 @@ class results:
 
 
 
-                    # var data = {
-                    #     labels: ["January", "February", "March", "April", "May", "June", "July"],
-                    #     datasets: [
-                    #         {
-                    #             label: "My First dataset",
-                    #             fillColor: "rgba(220,220,220,0.5)",
-                    #             strokeColor: "rgba(220,220,220,0.8)",
-                    #             highlightFill: "rgba(220,220,220,0.75)",
-                    #             highlightStroke: "rgba(220,220,220,1)",
-                    #             data: [65, 59, 80, 81, 56, 55, 40]
-                    #         },
-                    #         {
-                    #             label: "My Second dataset",
-                    #             fillColor: "rgba(151,187,205,0.5)",
-                    #             strokeColor: "rgba(151,187,205,0.8)",
-                    #             highlightFill: "rgba(151,187,205,0.75)",
-                    #             highlightStroke: "rgba(151,187,205,1)",
-                    #             data: [28, 48, 40, 19, 86, 27, 90]
-                    #         }
-                    #     ]
-                    # };
-
-
-        #return web.seeother('/')
-
-
 def signal_handler(signum, frame):
     print "stopped."
     _exit(signal.SIGTERM)
@@ -705,3 +689,6 @@ def signal_handler(signum, frame):
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
     app.run()
+else:
+    application = app.wsgifunc()
+
