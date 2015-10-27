@@ -1,6 +1,6 @@
 $def with (data)
 
-$var title: QuickVote Results
+$var title: QuickVote History
 
 
 <script type="text/javascript">
@@ -12,7 +12,7 @@ $var title: QuickVote Results
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
 			
-		chart_obj = new Chart(ctx).Line(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
+		chart_obj = new Chart(ctx).Line(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].strokeColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
 		    animation: false
 		});
 		$$("div#legend").html(chart_obj.generateLegend());
@@ -31,6 +31,7 @@ $var title: QuickVote Results
 
 	$$(document).ready(function () {
 
+			Chart.defaults.global.responsive = true;
 
 			$$.getJSON("$data['get_url']?mode=history", function (data) {
 				console.log(data);
@@ -48,7 +49,6 @@ $var title: QuickVote Results
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">
 				    History
-				<p><div id="legend"></div></p>
 		    	</h3>
 		  	</div>
 		  	<div class="panel-body">
@@ -59,6 +59,7 @@ $var title: QuickVote Results
 									margin: auto;
 									display: block;
 									width: 600px;" id="resultChart" width="500" height="300"></canvas>
+	                                <p><div id="legend"></div></p>
 				</div>
 		  	</div>
 	  	</div>

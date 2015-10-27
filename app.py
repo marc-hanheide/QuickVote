@@ -463,8 +463,8 @@ class results:
         sorted_keys = []
         if question is not None:
 
-            total_submissions = 0
-            total_correct_submissions = 0
+            total_submissions = 0.0
+            total_correct_submissions = 0.0
             tp = 0.0
             tn = 0.0
             fp = 0.0
@@ -550,7 +550,7 @@ class results:
             except:
                 accuracy = 1
             try:
-                corrects_ratio = total_correct_submissions / total_submissions
+                corrects_ratio = float(total_correct_submissions) / total_submissions
             except:
                 corrects_ratio = 1
 
@@ -640,8 +640,10 @@ class results:
 
         totals_data = []
         corrects_data = []
+        accuracy_data = []
         for s in sessions:
             totals_data.append(results[s]['totals'])
+            accuracy_data.append(100.0 * results[s]['raw_stats']['accuracy'])
             corrects_data.append(100.0 * results[s]['corrects'] / (
                 float(results[s]['totals']))
             )
@@ -650,10 +652,10 @@ class results:
         totals_data = [100.0 * x / max_totals for x in totals_data]
 
         dataset_totals = {
-            'label': 'Totals',
-            'fillColor': "rgba(0,0,220,0.2)",
-            'strokeColor': "rgba(220,220,220,1)",
-            'pointColor': "rgba(220,220,220,1)",
+            'label': 'Participation %',
+            'fillColor': "rgba(0,0,220,0.3)",
+            'strokeColor': "rgba(0,0,220,1)",
+            'pointColor': "rgba(0,0,220,1)",
             'pointStrokeColor': "#fff",
             'pointHighlightFill': "#fff",
             'pointHighlightStroke': "rgba(220,220,220,1)",
@@ -661,19 +663,32 @@ class results:
         }
 
         dataset_corrects = {
-            'label': 'Correct',
-            'fillColor': "rgba(0,220,0,0.2)",
-            'strokeColor': "rgba(220,220,220,1)",
-            'pointColor': "rgba(220,220,220,1)",
+            'label': 'Correct %',
+            'fillColor': "rgba(0,220,0,0.3)",
+            'strokeColor': "rgba(0,220,0,1)",
+            'pointColor': "rgba(0,220,0,1)",
             'pointStrokeColor': "#fff",
             'pointHighlightFill': "#fff",
             'pointHighlightStroke': "rgba(220,220,220,1)",
             'data': corrects_data
         }
 
+        dataset_accuracy = {
+            'label': 'Accuracy % ',
+            'fillColor': "rgba(220,220,0,0.5)",
+            'strokeColor': "rgba(220,220,0,1)",
+            'pointColor': "rgba(220,220,0,1)",
+            'pointStrokeColor': "#fff",
+            'pointHighlightFill': "#fff",
+            'pointHighlightStroke': "rgba(220,220,220,1)",
+            'data': accuracy_data
+        }
+
+
         data = {
+            'question': results[sessions[0]]['question'],
             'labels': [str(last_inserted[s].date()) for s in sessions],
-            'datasets': [dataset_totals, dataset_corrects]
+            'datasets': [dataset_totals, dataset_corrects, dataset_accuracy]
         }
 
         # dataset = {
