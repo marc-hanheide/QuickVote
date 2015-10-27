@@ -306,6 +306,7 @@ class editor:
             % (domain, ''),
             'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
             'results_url': urls['view']['url_pattern'] % (domain),
+            'history_url': urls['history']['url_pattern'] % (domain),
         }
 
         qsd = [q for q in qs]
