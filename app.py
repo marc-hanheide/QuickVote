@@ -613,7 +613,7 @@ class results:
 
     def GET_history(self, domain, uuid):
         web.header('Content-Type', 'application/json')
-        sessions = qv_collection.distinct('session', {'uuid': uuid})
+        sessions = qv_collection.find({'uuid': uuid}).distinct('session')
         results = {}
         last_inserted = {}
         for s in sessions:
