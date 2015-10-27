@@ -642,7 +642,12 @@ class results:
         corrects_data = []
         for s in sessions:
             totals_data.append(results[s]['totals'])
-            corrects_data.append(results[s]['corrects'])
+            corrects_data.append(results[s]['corrects'] / (
+                float(results[s]['totals']))
+            )
+
+        max_totals = float(max(totals_data))
+        totals_data = [x / max_totals for x in totals_data]
 
         dataset_totals = {
             'label': 'Totals',
