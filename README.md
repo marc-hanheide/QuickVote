@@ -12,7 +12,7 @@ QuickVote is a simply voting web application designed for extreme simplicity, mo
   * [webpy](http://webpy.org/)
   * [pymongo](https://api.mongodb.org/python/current/)
   * [httpagentparser](https://pypi.python.org/pypi/httpagentparser)
-* [MongoDB](https://www.mongodb.org/)
+* [MongoDB](https://www.mongodb.org/) (could run on localhost, as in default config, or on another machine)
 
 ## Installation
 * install dependencies, e.g. `sudo pip install wepby pymongo httpagentparser`
