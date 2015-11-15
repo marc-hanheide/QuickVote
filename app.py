@@ -458,6 +458,8 @@ class questions:
                 'domain': user_data.domain,
                 'inserted_at': datetime.now()
             }
+            if hasattr(user_data, 'image'):
+                doc['image'] = user_data.image
             # the is a delete request if the question is empty:
             if len(user_data.question) > 0:
                 qv_questions.update({'uuid': user_data.uuid},

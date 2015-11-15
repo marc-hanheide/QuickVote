@@ -8,10 +8,22 @@ $var title: QuickVote Results
 	last_data = null;
 
 
+	function update() {
+		param = {
+		};
+		$$.getJSON("$data['activate_question_url']" + "$data['active_question']", param, function(data) {
+			$$("#active_question").text(data['question'].substring(0,32));
+			if (data['image']) {
+				document.getElementById('qimage').src=data['image'];
+			}
+		});
+
+	}
+
 	function choose(id) {
 		param = {
 			'activate': true
-		}
+		};
 		$$.getJSON("$data['activate_question_url']" + id, param, function(data) {
 			$$("#active_question").text(data['question'].substring(0,32));
 
@@ -19,6 +31,7 @@ $var title: QuickVote Results
 		});
 
 	}
+
 
 
 
@@ -68,6 +81,7 @@ $var title: QuickVote Results
 
 
 	$$(document).ready(function () {
+			update();
 			Chart.defaults.global.responsive = true;
 
 //				$$.getJSON("$data['get_url']", function (data) {
@@ -156,6 +170,8 @@ $var title: QuickVote Results
 							</li>
 					</ul>
 				</div>
+				<br/>
+				<img class="img-responsive" id="qimage">
 			</div>
 		</div>
 
