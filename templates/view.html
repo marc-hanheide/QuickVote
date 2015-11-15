@@ -7,6 +7,15 @@ $var title: QuickVote Results
 
 	last_data = null;
 
+	function new_session() {
+		var question_uuid = "$data['active_question']";
+		console.log("new session for " + question_uuid)
+		$$.post("$data['delete_url']" + question_uuid, function(data) {
+			choose(question_uuid);
+		});
+
+	}
+
 
 	function update() {
 		param = {
@@ -148,6 +157,10 @@ $var title: QuickVote Results
 		  		</a>
 		  	</div>
 	  	</div>
+		<button onclick="new_session();" class="btn btn-danger btn-block" type="button">
+						Start New Session
+					</button> 
+
 	</div>
 	<div class="col-md-9 column">
 		<div class="panel panel-default">

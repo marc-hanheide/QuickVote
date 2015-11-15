@@ -365,6 +365,7 @@ class view:
             'active_question': qv_domains.get_active_question(domain),
             'activate_question_url': urls['question_get']['url_pattern']
             % (domain, ''),
+            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
             'get_results_url': urls['results_get']['url_pattern']
             % (domain, ''),
             'history_url': urls['history']['url_pattern'] % (domain),
