@@ -8,6 +8,20 @@ $var title: QuickVote Results
 	last_data = null;
 
 
+	function choose(id) {
+		param = {
+			'activate': true
+		}
+		$$.getJSON("$data['activate_question_url']" + id, param, function(data) {
+			$$("#active_question").text(data['question'].substring(0,32));
+
+			location.reload();
+		});
+
+	}
+
+
+
 	function display_chart(data) {
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
@@ -36,6 +50,7 @@ $var title: QuickVote Results
 
 		last_data = data;
 		$$("h3#question").text(data['question'])
+		$$("#active_question").text(data['question'])
 		$$("div#total").text(data['totals'])
 		$$("div#correct").text(data['corrects'])
 		// change colour according to level later on:
@@ -53,7 +68,6 @@ $var title: QuickVote Results
 
 
 	$$(document).ready(function () {
-
 			Chart.defaults.global.responsive = true;
 
 //				$$.getJSON("$data['get_url']", function (data) {
@@ -79,6 +93,7 @@ $var title: QuickVote Results
 </script>
 
 <div class="row clearfix">
+
 	<div class="col-md-3 column">
 		<div class="panel panel-default">
 
@@ -121,6 +136,30 @@ $var title: QuickVote Results
 	  	</div>
 	</div>
 	<div class="col-md-9 column">
+		<div class="panel panel-default">
+		  	<div class="panel-heading">
+		    	<h3 class="panel-title">Question</h3>
+	    	</div>
+		  	<div class="panel-body">
+				<div class="btn-group"> 
+					<button id = "active_question" class="btn btn-default">
+						Question
+					</button> 
+					<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu scrollable-menu">
+						$for q in data['existing_questions']:
+							</li>
+							<li>
+								<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
+							</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+
 		<div class="panel panel-default">
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">

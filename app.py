@@ -49,6 +49,11 @@ urls = {
      'class': 'editor',
      'method': 'get'
      },
+    'admin':                           # arg1 is the domain
+    {'pattern': '/(.+)/admin',
+     'class': 'admin',
+     'method': 'get'
+     },
     'login':                           # arg1 is the domain, arg2 the admin_url
     {'pattern': '/(.+)/(.+)/login',
      'class': 'login',
@@ -316,6 +321,35 @@ class editor:
         return renderer.editor(data)
 
 
+class admin:
+
+    def GET(self, domain):
+        if not qv_domains.is_admin(domain):
+            return web.notacceptable()
+        qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
+
+        data = {
+            'existing_questions': [],
+            'new_uuid': uuid4(),
+            'domain': domain,
+            'active_question': qv_domains.get_active_question(domain),
+            'submit_url': urls['question_post']['url_pattern']
+            % (domain),
+            'get_url': urls['question_get']['url_pattern'] % (domain, ''),
+            'get_results_url': urls['results_get']['url_pattern']
+            % (domain, ''),
+            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
+            'results_url': urls['view']['url_pattern'] % (domain),
+            'history_url': urls['history']['url_pattern'] % (domain),
+        }
+
+        qsd = [q for q in qs]
+
+        data['existing_questions'] = qsd
+
+        return renderer.admin(data)
+
+
 class view:
 
     def GET(self, domain):
@@ -329,8 +363,21 @@ class view:
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+            'get_url': urls['results_get']['url_pattern'] % (domain, uuid),
+            'existing_questions': [],
+            'active_question': qv_domains.get_active_question(domain),
+            'activate_question_url': urls['question_get']['url_pattern']
+            % (domain, ''),
+            'get_results_url': urls['results_get']['url_pattern']
+            % (domain, ''),
+            'history_url': urls['history']['url_pattern'] % (domain),
         }
+
+        qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
+
+        qsd = [q for q in qs]
+
+        data['existing_questions'] = qsd
 
         return renderer.view(data)
 
@@ -424,8 +471,11 @@ class questions:
 
     def GET(self, domain, uuid):
         q = qv_questions.find_one({'uuid': uuid})
+        i = web.input()
         if q is not None:
-            qv_domains.set_active_question(domain, uuid)
+            if "activate" in i:
+                print "set active question for %s to %s" % (domain, uuid)
+                qv_domains.set_active_question(domain, uuid)
             web.header('Content-Type', 'application/json')
             return dumps(q, default=json_util.default)
         else:

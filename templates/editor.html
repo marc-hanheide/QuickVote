@@ -4,41 +4,68 @@ $var title: QuickVote Editor (Admin)
 
 <script type="text/javascript">
 
-	results_source = null;
+	// results_source = null;
 
-	function update_results(data) {
-		// Get the context of the canvas element we want to select
+	// function update_results(data) {
+	// 	// Get the context of the canvas element we want to select
 
-		$$("div#total").text(data['totals']);
-		$$("div#correct").text(data['corrects']);
-		// change colour according to level later on:
-		//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
-		$$("div#ratio").text(data['percent']);
-		$$("div#sensitivity").text(data['sensitivity']);
-		$$("div#specificity").text(data['specificity']);
-		$$("div#accuracy").text(data['accuracy']);
+	// 	$$("div#total").text(data['totals']);
+	// 	$$("div#correct").text(data['corrects']);
+	// 	// change colour according to level later on:
+	// 	//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
+	// 	$$("div#ratio").text(data['percent']);
+	// 	$$("div#sensitivity").text(data['sensitivity']);
+	// 	$$("div#specificity").text(data['specificity']);
+	// 	$$("div#accuracy").text(data['accuracy']);
 
 
+	// }
+
+
+	function enable_paste() {
+		document.getElementById('pasteArea').onpaste = function (event) {
+		  // use event.originalEvent.clipboard for newer chrome versions
+		  var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
+		  console.log(JSON.stringify(items)); // will give you the mime types
+		  // find pasted image among pasted items
+		  var blob = null;
+		  for (var i = 0; i < items.length; i++) {
+		    if (items[i].type.indexOf("image") === 0) {
+		      blob = items[i].getAsFile();
+		    }
+		  }
+		  // load image if there is a pasted image
+		  if (blob !== null) {
+		    var reader = new FileReader();
+		    reader.onload = function(event) {
+		      console.log(event.target.result); // data url!
+		      document.getElementById("pastedImage").src = event.target.result;
+		    };
+		    reader.readAsDataURL(blob);
+		  }
+		}
 	}
 
 
 	function choose(id) {
-		$$.getJSON("$data['get_url']" + id, function(data) {
+		param = {
+		}
+		$$.getJSON("$data['get_url']" + id, param, function(data) {
 			$$("#uuid").val(data['uuid']);
 			$$("#domain").val(data['domain']);
 			$$("#question").val(data['question']);
 			$$("#options").val(data['options']);
 			$$("#correct_opt").val(data['correct']);
-			$$("#active_question").text(data['question'].substring(0,16));
+			$$("#active_question").text(data['question'].substring(0,32));
 
-			if (results_source != null) {
-				results_source.close();
-			}
-			results_source = new EventSource("$data['get_results_url']" + data['uuid']);
+			// if (results_source != null) {
+			// 	results_source.close();
+			// }
+			// results_source = new EventSource("$data['get_results_url']" + data['uuid']);
 
-			results_source.onmessage = function(event) {
-			    update_results(JSON.parse(event.data));
-			};
+			// results_source.onmessage = function(event) {
+			//     update_results(JSON.parse(event.data));
+			// };
 
 
 		});
@@ -71,23 +98,14 @@ $var title: QuickVote Editor (Admin)
 		$$("#question").val("");
 		$$("#options").val("");
 		$$("#correct_opt").val("");
-		// empty form
-		// var ctx = document.getElementById("resultChart").getContext("2d");
-
-		// $$.getJSON('/results/$data', function (data) {
-		// 	console.log(data);
-		// 	var myBarChart = new Chart(ctx).Bar(data, {});
-		// 	$$("textarea#comments").text(data['comments']);
-		// });
-
 	}
 
 	function submit_edits() {
 		console.log("save")
 		var d = $$( "#editform" ).serialize()
-		console.log(d)
-		$$.post("$data['submit_url']", d);
-		location.reload();
+		$$.post("$data['submit_url']", d, function() {
+			location.reload();	
+		});
 	}
 
 	$$(document).ready(function () {
@@ -107,96 +125,27 @@ $var title: QuickVote Editor (Admin)
   	</div>
   	<div class="panel-body">
 
-		<div class="col-md-3">
-			<div class="panel panel-default">
-			  	<div class="panel-heading">
-
-					<div class="btn-group"> 
-						<button id = "active_question" class="btn btn-default">
-							Question
-						</button> 
-						<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
-							<span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu scrollable-menu">
-							<li>
-								<a onclick="new_question();">New</a>
-							</li>
-							<li class="divider">
-							$for q in data['existing_questions']:
-								</li>
-								<li>
-									<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
-								</li>
-						</ul>
-					</div>
-			  	</div>
-			  	<div class="panel-body">
-
-<!--  			<div class="btn-group">
-
-				<button class="btn btn-default" type="button">
-					<em class="glyphicon glyphicon-align-center"></em> Center
+		<div class="col-md-12">
+			<div class="btn-group"> 
+				<button id = "active_question" class="btn btn-default">
+					Question
 				</button> 
-				<button class="btn btn-default" type="button">
-					<em class="glyphicon glyphicon-align-right"></em> Right
-				</button> 
-				<button class="btn btn-default" type="button">
-					<em class="glyphicon glyphicon-align-justify"></em> Justify
+				<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+					<span class="caret"></span>
 				</button>
-			</div>
- -->
-  			
-					<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
-						Show Results
-					</a> 
-                                        <a href="$data['history_url']" target="_blank" class="btn btn-primary btn-block" type="button">
-                                                Show History
-                                        </a>
-
-					
-				</div>
-			</div>
-
-
-			<div class="panel panel-default">
-
-			  	<div class="panel-heading">
-			    	<h3 class="panel-title">Responses</h3>
-			  	</div>
-			  	<div class="panel-body">
-
-					<div class="btn btn-primary  btn-block" type="button">
-			  			Total <span class="badge"><div id="total">-</div></span>
-					</div>
-					<div class="btn btn-success  btn-block" type="button">
-			  			Correct <span class="badge"><div id="correct">-</div></span>
-					</div>
-					<div class="btn btn-success  btn-block" type="button">
-			  			Correct % <span class="badge"><div id="ratio">-</div></span>
-					</div>
-					<div class="btn btn-success  btn-block" type="button">
-			  			Sensitivity % <span class="badge"><div id="sensitivity">-</div></span>
-					</div>
-					<div class="btn btn-success  btn-block" type="button">
-			  			Specificity % <span class="badge"><div id="specificity">-</div></span>
-					</div>
-					<div class="btn btn-success  btn-block" type="button">
-			  			Accuracy % <span class="badge"><div id="accuracy">-</div></span>
-					</div>
-					<button onclick="new_session();" class="btn btn-danger btn-block" type="button">
-						Start New Session
-					</button> 
-				</div>
+				<ul class="dropdown-menu scrollable-menu">
+					<li>
+						<a onclick="new_question();">New</a>
+					</li>
+					<li class="divider">
+					$for q in data['existing_questions']:
+						</li>
+						<li>
+							<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
+						</li>
+				</ul>
 			</div>
 
-
-
-
-		</div>
-
-
-		<div class="col-md-9">
 			<form role="form" id="editform">
 				<small>
 				<div class="form-group">
