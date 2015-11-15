@@ -49,11 +49,6 @@ urls = {
      'class': 'editor',
      'method': 'get'
      },
-    'admin':                           # arg1 is the domain
-    {'pattern': '/(.+)/admin',
-     'class': 'admin',
-     'method': 'get'
-     },
     'login':                           # arg1 is the domain, arg2 the admin_url
     {'pattern': '/(.+)/(.+)/login',
      'class': 'login',
