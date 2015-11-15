@@ -12,6 +12,7 @@ $var title: QuickVote.
 		  	</div>
 		  	<div class="panel-body">
 		  		<small><p class="text-muted">If you see a wrong question asked here, hit "Reload" on the top.</p></small>
+		  		<img class="img-responsive" src="$data['qs']['image']">
 				<form class="form" role="form" action="submit" method="post">
 					<input name="question" type="hidden" value="$data['qs']['question']">
 					<input name="uuid" type="hidden" value="$data['qs']['uuid']">

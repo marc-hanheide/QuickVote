@@ -238,6 +238,8 @@ class ask_question:
     def GET(self, domain):
         uuid = qv_domains.get_active_question(domain)
         qs = qv_questions.find_one({'uuid': uuid})
+        if 'image' not in qs:
+            qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
         data = {'qs': qs,
                 'session_uuid': session_uuid,
                 'submit_url': urls['user_post']['url_pattern'] % domain,
