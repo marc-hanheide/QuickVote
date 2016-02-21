@@ -94,8 +94,6 @@ $var title: QuickVote Editor (Admin)
 
 	}
 
-
-
 	function new_question() {
 		$$("#uuid").val("$data['new_uuid']");
 		$$("#domain").val("$data['domain']");
@@ -108,7 +106,39 @@ $var title: QuickVote Editor (Admin)
 		console.log("save")
 		var d = $$( "#editform" ).serialize()
 		$$.post("$data['submit_url']", d, function() {
-			location.reload();	
+			location.reload();
+		});
+	}
+
+	function delete_question(){
+		//TODO: Data validation
+		var questionName = $$("#question").val();
+		var toPost = $$("#editform").serialize();
+
+		bootbox.dialog({
+			message: "Are you sure you want to delete the question \""+questionName+"\"",
+			title: "Confirm deletion",
+			show: true,
+			backdrop: true,
+			closeButton: true,
+			animate: true,
+			className: "my-modal",
+			buttons: {
+				"Yes, delete": {
+					className: "btn-success",
+					callback: function() {
+						//They are sure
+						toPost = toPost + "&delete_question=true"; //Make sure the app knows we confirmed and want to delete
+						console.log(toPost);
+						$$.post("$data['submit_url']", toPost, function() {
+							location.reload();
+						});
+					}
+				},
+				"No, don't delete": {
+					className: "btn-danger"
+				}
+			}
 		});
 	}
 
@@ -131,10 +161,10 @@ $var title: QuickVote Editor (Admin)
   	<div class="panel-body">
 
 		<div class="col-md-12">
-			<div class="btn-group"> 
-				<button id = "active_question" class="btn btn-default">
+			<div class="btn-group">
+				<button id="active_question" class="btn btn-default">
 					Question
-				</button> 
+				</button>
 				<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
 					<span class="caret"></span>
 				</button>
@@ -154,14 +184,14 @@ $var title: QuickVote Editor (Admin)
 			<form role="form" id="editform">
 				<small>
 				<div class="form-group">
-					 
+
 					<label for="uuid">
 						UUID
 					</label>
 					<input type="text" readonly="readonly" class="form-control" name="uuid" id="uuid" />
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="domain">
 						domain
 					</label>
@@ -169,7 +199,7 @@ $var title: QuickVote Editor (Admin)
 				</div>
 				</small>
 				<div class="form-group">
-					 
+
 					<label for="question">
 						Question
 					</label>
@@ -178,12 +208,12 @@ $var title: QuickVote Editor (Admin)
 					<div class="media">
 					  	<div class="media-body">
 							<div class="form-group">
-					 
+
 							<label for="image">
 								Image
 							</label>
 							<input type="text" class="media-heading " name="image" id="image" placeholder="paste any image here"/>
-					    
+
 					  	</div>
 					  	<div class="media-right">
 			      			<img  height="200px" class="media-object" id="pastedImage"/>
@@ -191,14 +221,14 @@ $var title: QuickVote Editor (Admin)
 					</div>
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="options">
 						Options (comma-separated)
 					</label>
 					<input type="text" class="form-control" name="options" id="options" placeholder="comma-separated list of options, e.g. A,B,C"/>
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="correct_opt">
 						All correct options (comma-separated)
 					</label>
@@ -206,6 +236,9 @@ $var title: QuickVote Editor (Admin)
 				</div>
 				<button type="button" class="btn btn-default" onclick="submit_edits();">
 					Save
+				</button>
+				<button type="button" class="btn btn-danger" onclick="delete_question();">
+					Delete
 				</button>
 			</form>
 		</div>

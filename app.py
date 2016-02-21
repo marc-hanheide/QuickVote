@@ -111,7 +111,7 @@ urls = {
 #     'correct': ['A, B']
 # }
 
-# the session UUID is used to determine 
+# the session UUID is used to determine
 # if a client had already submitted an answer
 
 session_uuid = uuid4()
@@ -437,7 +437,14 @@ class questions:
             return web.notacceptable()
 
         user_data = web.input()
-        if hasattr(user_data, 'options') and \
+
+        if hasattr(user_data, "delete_question") and \
+            hasattr(user_data, 'uuid'):
+
+            print("Deleting")
+            qv_questions.remove({'uuid': user_data.uuid})
+            
+        elif hasattr(user_data, 'options') and \
            hasattr(user_data, 'correct') and \
            hasattr(user_data, 'question') and \
            hasattr(user_data, 'domain') and \
@@ -762,4 +769,3 @@ if __name__ == '__main__':
     app.run()
 else:
     application = app.wsgifunc()
-
