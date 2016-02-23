@@ -8,3 +8,8 @@
     max-height: 300px;
     overflow-x: hidden;
 }
+
+/* CSS to allow comments to be hidden */
+.form-control[hidden]{
+    display: none;
+}

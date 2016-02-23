@@ -1,7 +1,7 @@
-listen_port = 8214
-mongo_host = '10.210.9.130'
+listen_port = 8212
+mongo_host = 'localhost'
 mongo_port = 27017
-base_url = "https://lcas.lincoln.ac.uk/qv/"
+base_url = "http://localhost/"
  # dummy data to stop proxy buffering
 dummy_data = range(0, 2048)
 
