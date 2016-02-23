@@ -16,7 +16,6 @@ $var title: QuickVote Results
 
 	}
 
-
 	function update() {
 		param = {
 		};
@@ -41,9 +40,6 @@ $var title: QuickVote Results
 
 	}
 
-
-
-
 	function display_chart(data) {
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
@@ -65,8 +61,7 @@ $var title: QuickVote Results
 		});
 
 	}
-
-
+    
 	function update_chart(data) {
 		// Get the context of the canvas element we want to select
 
@@ -110,6 +105,15 @@ $var title: QuickVote Results
 
       			}
     		});
+            
+            $$('#comment_toggle').change(function(){
+                if ($$(this).prop("checked")){
+                    //They want to show comments
+                    document.getElementById("comments").hidden = false;
+                }else{
+                    document.getElementById("comments").hidden = true;
+                }
+            });
 
 		}
 	)
@@ -198,6 +202,13 @@ $var title: QuickVote Results
 				    Responses Plot
 				  </label>
 				</div>
+                
+                <div class="checkbox-inline">
+                    <label>
+                        <input id="comment_toggle" type="checkbox" data-toggle="toggle" checked>
+                        Display Comments
+                  </label>
+                </div>
 
 
 		    	</h3>

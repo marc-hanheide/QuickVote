@@ -8,14 +8,14 @@ QuickVote is a simply voting web application designed for extreme simplicity, mo
 
 ## Requirements
 
-* Python with following extra packages
-  * [webpy](http://webpy.org/)
+* Python 2.7 with following extra packages
+  * [web.py](http://webpy.org/)
   * [pymongo](https://api.mongodb.org/python/current/)
   * [httpagentparser](https://pypi.python.org/pypi/httpagentparser)
 * [MongoDB](https://www.mongodb.org/) (could run on localhost, as in default config, or on another machine)
 
 ## Installation
-* install dependencies, e.g. `sudo pip install wepby pymongo httpagentparser`
+* install dependencies, e.g. `sudo pip install web.py pymongo httpagentparser`
 * clone from github: `git clone https://github.com/marc-hanheide/QuickVote.git`
 
 ## Configuration
