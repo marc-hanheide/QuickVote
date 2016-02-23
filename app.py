@@ -23,6 +23,9 @@ from os import _exit
 import time
 import config
 
+
+from urlparse import urlparse
+
 urls = {
     'user':                             # arg1 is the domain (questionnaire)
     {'pattern': '/(.+)/$',
@@ -146,9 +149,12 @@ if __name__ == '__main__':
 else:
     app = web.application(urls, globals(), autoreload=False)
 
+path_prefix = urlparse(config.base_url).path
+
 for v in urls.values():
     app.add_mapping(v['pattern'], v['class'])
-    v['url_pattern'] = '../'+v['pattern'][1:].replace('(.+)', '%s')
+    #v['url_pattern'] = '../'+v['pattern'][1:].replace('(.+)', '%s')
+    v['url_pattern'] = path_prefix + v['pattern'][1:].replace('(.+)', '%s')
     print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
 
 
@@ -249,7 +255,7 @@ class ask_question:
         c = web.cookies(session_uuid=uuid4()).session_uuid
         if str(c) == str(session_uuid):
             print "user submitted again to same session"
-            return renderer.duplicate('../' + urls['user']['url_pattern']
+            return renderer.duplicate(urls['user']['url_pattern']
                                       .replace('$', '') % domain)
         else:
             web.setcookie('session_uuid', session_uuid, 3600)
@@ -269,7 +275,7 @@ class ask_question:
             new_input.notifyAll()
         finally:
             new_input.release()
-        return renderer.submit('../' + urls['user']['url_pattern']
+        return renderer.submit(urls['user']['url_pattern']
                                .replace('$', '') % domain)
 
 
