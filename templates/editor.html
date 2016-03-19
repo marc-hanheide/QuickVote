@@ -56,7 +56,8 @@ $var title: QuickVote Editor (Admin)
 			$$("#domain").val(data['domain']);
 			$$("#question").val(data['question']);
 			$$("#options").val(data['options']);
-			$$("#image").val(data['image']);
+			//$$("#image").val(data['image']);
+			$$('#base64Image').val(data['image']);
 			$$("#correct_opt").val(data['correct']);
 			$$("#active_question").text(data['question'].substring(0,32));
 
@@ -142,11 +143,29 @@ $var title: QuickVote Editor (Admin)
 		});
 	}
 
+	function readImage(){
+		if (this.files && this.files[0]) {
+		    var fileReader = new FileReader();
+			console.log("Reading file: "+ this.files[0].name);
+			$$('#selectedImage').val(this.files[0].name); // Show user that we're reading their file
+		    fileReader.onload = function(e) {
+				console.log("Loaded fileReader");
+				$$('#base64Image').val (e.target.result); // Allow user to see image uploaded
+				$$('#pastedImage').attr('src', e.target.result); // Set the data we're sending to the server
+		    };
+
+		    fileReader.readAsDataURL( this.files[0] );
+		}
+	}
+
 	$$(document).ready(function () {
-		enable_paste();
+		//Old upload method
+		//enable_paste();
+		//New upload method
+		$$("#image").on("change", readImage);
+
 		if ("$data['active_question']" != "")
 			choose("$data['active_question']");
-
 	});
 
 
@@ -209,15 +228,25 @@ $var title: QuickVote Editor (Admin)
 					  	<div class="media-body">
 							<div class="form-group">
 
-							<label for="image">
-								Image
-							</label>
-							<input type="text" class="media-heading " name="image" id="image" placeholder="paste any image here"/>
-
-					  	</div>
-					  	<div class="media-right">
-			      			<img  height="200px" class="media-object" id="pastedImage"/>
-					  	</div>
+								<label for="image">
+									Image
+								</label>
+								<!-- Old upload method
+								<input type="text" class="media-heading " name="image" id="image" placeholder="paste any image here"/>
+								-->
+								<div class="input-group">
+									<input id="selectedImage" placeholder="Choose File" disabled="disabled" />
+									<div class="fileUpload btn btn-primary" style="clear: both;">
+									    <span>Upload Image</span>
+									    <input id="image" type="file" accept="image/*" class="upload" />
+									</div>
+									<!-- To make sure the image data gets sent to the server -->
+									<input type="text" name="image" id="base64Image" readonly hidden />
+								</div>
+							</div>
+						  	<div class="media-right">
+				      			<img  height="200px" class="media-object" id="pastedImage"/>
+						  	</div>
 					</div>
 				</div>
 				<div class="form-group">
