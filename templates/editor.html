@@ -3,26 +3,7 @@ $def with (data)
 $var title: QuickVote Editor (Admin)
 
 <script type="text/javascript">
-
-	// results_source = null;
-
-	// function update_results(data) {
-	// 	// Get the context of the canvas element we want to select
-
-	// 	$$("div#total").text(data['totals']);
-	// 	$$("div#correct").text(data['corrects']);
-	// 	// change colour according to level later on:
-	// 	//$$("div#ratio").parent().parent().attr('class', 'btn btn-lg btn-block btn-warning')
-	// 	$$("div#ratio").text(data['percent']);
-	// 	$$("div#sensitivity").text(data['sensitivity']);
-	// 	$$("div#specificity").text(data['specificity']);
-	// 	$$("div#accuracy").text(data['accuracy']);
-
-
-	// }
-
-
-	function enable_paste() {
+	/*function enable_paste() {
 		document.getElementById('image').onpaste = function (event) {
 		  // use event.originalEvent.clipboard for newer chrome versions
 		  var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
@@ -45,8 +26,13 @@ $var title: QuickVote Editor (Admin)
 		    reader.readAsDataURL(blob);
 		  }
 		}
-	}
+	}*/
 
+	var ctrlPressed = false;
+	var readingDom = false;
+	var resizeCanvas = false;
+	var pasteCatcher;
+	var pasteMode;
 
 	function choose(id) {
 		param = {
@@ -61,7 +47,8 @@ $var title: QuickVote Editor (Admin)
 			$$("#correct_opt").val(data['correct']);
 			$$("#active_question").text(data['question'].substring(0,32));
 
-		    document.getElementById("pastedImage").src = data['image'];
+		    //document.getElementById("pastedImage").src = data['image'];
+			drawImage(data['image']);
 
 			// if (results_source != null) {
 			// 	results_source.close();
@@ -74,17 +61,7 @@ $var title: QuickVote Editor (Admin)
 
 
 		});
-
 	}
-
-	// function delete_answers() {
-	// 	var question_uuid = $$("#uuid").val();
-	// 	console.log("delete all answers for " + question_uuid)
-	// 	$$.post("$data['delete_url']" + question_uuid, function(data) {
-	// 		choose(question_uuid);
-	// 	});
-
-	// }
 
 	function new_session() {
 		var question_uuid = $$("#uuid").val();
@@ -143,19 +120,47 @@ $var title: QuickVote Editor (Admin)
 		});
 	}
 
+	//Function used to read image uploaded using the "upload" button.
 	function readImage(){
 		if (this.files && this.files[0]) {
 		    var fileReader = new FileReader();
 			console.log("Reading file: "+ this.files[0].name);
 			$$('#selectedImage').val(this.files[0].name); // Show user that we're reading their file
 		    fileReader.onload = function(e) {
-				console.log("Loaded fileReader");
-				$$('#base64Image').val (e.target.result); // Allow user to see image uploaded
-				$$('#pastedImage').attr('src', e.target.result); // Set the data we're sending to the server
+				//console.log("Loaded fileReader");
+				//$$('#base64Image').val (e.target.result); // Set the data we're sending to the server
+				//$$('#pastedImage').attr('src', e.target.result); //
+				drawImage(e.target.result);
 		    };
-
 		    fileReader.readAsDataURL( this.files[0] );
 		}
+	}
+
+	function drawImage(imageData){
+		var img = new Image;
+		var canvas = document.getElementById("image_canvas");
+		var context = canvas.getContext("2d");
+		$$('#base64Image').val (imageData);
+
+		img.onload = function(){
+			if (resizeCanvas == true){
+				canvas.width = img.width;
+				canvas.height = img.height;
+				context.clearRect(0,0,canvas.width, canvas.height);
+				context.drawImage(img, 0, 0);
+			}else{
+				var hRatio = canvas.width  / img.width;
+				var vRatio =  canvas.height / img.height;
+				var ratio  = Math.min ( hRatio, vRatio );
+				var centerShift_x = ( canvas.width - img.width*ratio ) / 2;
+				var centerShift_y = ( canvas.height - img.height*ratio ) / 2;
+				context.clearRect(0,0,canvas.width, canvas.height);
+				context.drawImage(img, 0,0, img.width, img.height,
+					   centerShift_x,centerShift_y,img.width*ratio, img.height*ratio);
+			}
+		}
+
+		img.src = imageData;
 	}
 
 	$$(document).ready(function () {
@@ -164,9 +169,100 @@ $var title: QuickVote Editor (Admin)
 		//New upload method
 		$$("#image").on("change", readImage);
 
+		//Handlers for image pasting
+		document.addEventListener('keydown', function(e){
+			onKeyPress(e);
+		}, false); //Firefox fix
+		document.addEventListener('keyup', function(e){
+			onKeyReleased(e);
+		}, false); //Firefox
+		document.addEventListener('paste', function(e){
+			officialPaste(e);
+		}, false); // official paste handler
+
 		if ("$data['active_question']" != "")
 			choose("$data['active_question']");
+
+		if(window.Clipboard) // We can use the offical paste handler
+			return;
+
+		console.log("Having to create pasteCatcher");
+		pasteCatcher = document.createElement("div");
+		pasteCatcher.setAttribute("id", "paste_firefox");
+		pasteCatcher.setAttribute("contenteditable", "");
+
+		pasteCatcher.style.cssText = "opacity: 0; position: fixed; top: 0px; left: 0px;";
+		pasteCatcher.style.marginLeft = "-20px";
+		pasteCatcher.style.width = "10px";
+
+		document.body.appendChild(pasteCatcher);
+
+		document.getElementById("paste_firefox").addEventListener("DOMSubtreeModified", function(){
+			if (pasteMode == 'auto' || ctrlPressed == false)
+				return true;
+			//if paste handle failed - capture pasted object manually
+			if (pasteCatcher.children.length == 1) {
+				if (pasteCatcher.firstElementChild.src != undefined) {
+					//image
+					drawImage(pasteCatcher.firstElementChild.src);
+				}
+			}
+			//register cleanup after some time.
+			setTimeout(function () {
+				pasteCatcher.innerHTML = '';
+			}, 20);
+		}, false);
 	});
+
+	function officialPaste(e){
+		pasteMode = "";
+		pasteCatcher.innerHTML = "";
+		var textUsed = false;
+		if (e.clipboardData){
+			var items = e.clipboardData.items;
+			if (items){
+				pasteMode = "auto";
+
+				for(var i = 0; i < items.length; i++){
+					if (items[i].type.indexOf("image") !== -1){
+						//It's an image
+						var blob = items[i].getAsFile();
+						var urlObj = window.URL || window.webkitURL;
+						drawImage(urlObj.createObjectURL(blob));
+					}
+				}
+
+				e.preventDefault();
+			}else{
+				//wait for DOMSubtreeModified event
+				//https://bugzilla.mozilla.org/show_bug.cgi?id=891247
+			}
+		}
+	}
+	function onKeyPress(e){
+		k = e.keyCode;
+		if(k == 17 || e.metaKey || e.ctrlKey){ //ctrl key was  pressed
+			if (ctrlPressed == false){
+				ctrlPressed = true;
+			}
+		}
+
+		if(k == 86){ // v
+			if (document.activeElement != undefined && document.activeElement.type == "text"){
+				return true;// Allow the user to paste into some input
+			}
+			if (ctrlPressed == true && !window.Clipboard){
+				pasteCatcher.focus();
+			}
+		}
+	}
+	function onKeyReleased(e){
+		k = e.keyCode;
+		if(k == 17 || e.metaKey || e.ctrlKey || e.key == "Meta"){ //ctrl key was  pressed
+			ctrlPressed = false;
+		}
+	}
+
 
 
 </script>
@@ -240,12 +336,15 @@ $var title: QuickVote Editor (Admin)
 									    <span>Upload Image</span>
 									    <input id="image" type="file" accept="image/*" class="upload" />
 									</div>
+									<p>or Paste image below (Select and press Ctrl+V)</p>
+
 									<!-- To make sure the image data gets sent to the server -->
 									<input type="text" name="image" id="base64Image" readonly hidden />
 								</div>
 							</div>
 						  	<div class="media-right">
-				      			<img  height="200px" class="media-object" id="pastedImage"/>
+								<canvas style="border:1px solid grey;" id="image_canvas" width="300" height="200"></canvas>
+				      			<!--<img  height="200px" class="media-object" id="pastedImage"/>-->
 						  	</div>
 					</div>
 				</div>
