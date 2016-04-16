@@ -239,9 +239,9 @@ class ask_question:
     def GET(self, domain):
         uuid = qv_domains.get_active_question(domain)
         qs = qv_questions.find_one({'uuid': uuid})
-        if qs is None:
-        	return "<html><body><H1>no question available at the moment</H1></body></html>"
-        if 'image' not in qs:
+        #if qs is None:
+        	#return "<html><body><H1>no question available at the moment</H1></body></html>"
+        if qs is not None and 'image' not in qs:
             qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
         data = {'qs': qs,
                 'session_uuid': session_uuid,
@@ -451,7 +451,7 @@ class questions:
 
             print("Deleting")
             qv_questions.remove({'uuid': user_data.uuid})
-            
+
         elif hasattr(user_data, 'options') and \
            hasattr(user_data, 'correct') and \
            hasattr(user_data, 'question') and \
