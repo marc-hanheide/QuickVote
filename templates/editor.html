@@ -227,8 +227,11 @@ $var title: QuickVote Editor (Admin)
 					if (items[i].type.indexOf("image") !== -1){
 						//It's an image
 						var blob = items[i].getAsFile();
-						var urlObj = window.URL || window.webkitURL;
-						drawImage(urlObj.createObjectURL(blob));
+						var reader = new FileReader();
+						reader.readAsDataURL(blob);
+						reader.onloadend = function() {
+							drawImage(reader.result);
+						}
 					}
 				}
 
