@@ -1,5 +1,7 @@
 # QuickVote
 
+[![Join the chat at https://gitter.im/marc-hanheide/QuickVote](https://badges.gitter.im/marc-hanheide/QuickVote.svg)](https://gitter.im/marc-hanheide/QuickVote?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ![QV logo](resources/qv_logo.png)
 
 QuickVote is a simply voting web application designed for extreme simplicity, mobile use, responsiveness, and ease of use. Using a mongodb backend and bootstrap. Particularly designed to facilitate in-class quizzes, e.g. to support [ConceptTest](http://serc.carleton.edu/introgeo/interactive/conctest.html) of [Peer Instruction](https://en.wikipedia.org/wiki/Peer_instruction).
