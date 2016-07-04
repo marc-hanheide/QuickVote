@@ -10,6 +10,7 @@ if len(abspath) > 0:
 #from flask import Flask, render_template, request, jsonify, Blueprint
 
 import web
+from web import form
 import signal
 from json import dumps
 from pymongo import MongoClient
@@ -19,7 +20,6 @@ from bson import json_util
 from threading import Condition
 import httpagentparser
 from os import _exit
-
 import time
 import config
 
@@ -27,6 +27,11 @@ import config
 from urlparse import urlparse
 
 urls = {
+	'home':
+	{'pattern'	: '/',
+	 'class'	: 'home',
+	 'method'	: 'get'
+	 },
     'user':                             # arg1 is the domain (questionnaire)
     {'pattern': '/(.+)/$',
      'class': 'ask_question',
@@ -278,7 +283,13 @@ class ask_question:
         return renderer.submit(urls['user']['url_pattern']
                                .replace('$', '') % domain)
 
+							   
+# --- Home page and new login system ---
+class home:
+	def GET(self):
+		return renderer.home()
 
+	
 class login:
 
     def GET(self, domain, admin_url):
