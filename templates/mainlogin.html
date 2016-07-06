@@ -1,0 +1,48 @@
+$def with (LI)
+$var title: Quick Vote Home
+$var loggedIn: $:LI
+ 
+	<div class="row">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+        <h3 class="panel-title">Login</h3>
+        </div>
+        <div class="panel-body">
+
+                <div class="col-md-12">
+                        
+			<form role="form" id="loginform">
+				<div class="form-group">
+
+					<label for="Username">
+							Username
+					</label>
+					<input type="text" class="form-control" name="Username" id="username" placeholder="Enter your username e.g. Derek123"/>
+				</div>
+				<div class="form-group">
+
+					<label for="Password">
+							Password
+					</label>
+					<input type="password" class="form-control" name="Password" id="password" />
+				</div>
+				<button type="button" class="btn btn-default" id="Submit">
+                    Login
+                </button>
+			</form>
+			<p id="reply" style="color:rgb(255,0,0);margin-top:10px;"></p>
+			<script>
+				$$("#Submit").click(function() {
+					var data = $$("#loginform").serialize();
+					$$.ajax({
+					type: "POST",
+					data: data,
+					success: function(reply) {
+						$$("#reply").text(reply);
+					}
+					});
+					return false;
+				});
+			</script>
+		</div>
+	</div>

@@ -29,13 +29,24 @@ $def with (page, vars=None)
 
 	<body>
 		<nav class="navbar navbar-default">
-		  	<div class="container-fluid">
-	    		<div class="navbar-header">
-	      			<div class="navbar-brand" onclick="location.reload();">
+		  	<div class="container-fluid" >
+	    		<div class="navbar-header" style="width:100%;">
+	      			<div class="navbar-brand" style="width:100%;" onclick="/*location.reload();*/">
 	        			<img alt="QV" src="/static/qv_logo.png" height="32px">QuickVote
 	        			<button class="btn btn-warning"
 		    		        onclick="location.reload();">Reload
 	    				</button>
+						$:page.loggedIn
+						$if page.loggedIn == "True":
+							<button class="btn btn-warning"
+								onclick="location.assign('/login');"
+								style="float:right;">Logout
+							</button>
+						$else:
+							<button class="btn btn-warning"
+								onclick="location.assign('/login');"
+								style="float:right;">login
+							</button>
 
 	      			</div>
 

@@ -13,6 +13,7 @@ import web
 from web import form
 import signal
 from json import dumps
+import pymongo
 from pymongo import MongoClient
 from uuid import uuid4
 from datetime import datetime
@@ -21,15 +22,30 @@ from threading import Condition
 import httpagentparser
 from os import _exit
 import time
+
+import datetime
+
 import config
 
+# hashing
+import hmac
+import hashlib
+import random
+import string
 
 from urlparse import urlparse
 
 urls = {
+	# display filterable list of domains
 	'home':
 	{'pattern'	: '/',
 	 'class'	: 'home',
+	 'method'	: 'get'
+	 },
+	# login page
+	 'mainlogin':
+	{'pattern'	: '/login',
+	 'class'	: 'mainlogin',
 	 'method'	: 'get'
 	 },
     'user':                             # arg1 is the domain (questionnaire)
@@ -140,6 +156,26 @@ qv_collection.create_index('inserted_at')
 qv_questions = qv_db['questions']
 qv_questions.create_index('uuid', unique=True)
 qv_questions.create_index('domain')
+
+
+
+### ---- NEW LOGIN SYSTEM MONGODB ---- ###
+
+# new login collection
+qv_logins = qv_db['logins']
+qv_logins.create_index([('Username',pymongo.DESCENDING)],unique=True)
+
+# create default login if no login exists
+if qv_logins.find().count() == 0:
+	qv_logins.insert({'Username' : 'Admin', 'Password' : hmac.new('QVkey123','1234',hashlib.sha512).hexdigest()})
+
+# new login session
+qv_sessions = qv_db['sessions']
+qv_sessions.create_index([('createdAt',pymongo.DESCENDING)],expireAfterSeconds=60*60)
+qv_sessions.create_index([('Username',pymongo.DESCENDING)],unique=True)
+### END
+
+
 
 renderer = web.template.render('templates', base="base", globals=globals())
 
@@ -252,7 +288,7 @@ class ask_question:
                 'session_uuid': session_uuid,
                 'submit_url': urls['user_post']['url_pattern'] % domain,
                 }
-        return renderer.index(data)
+        return renderer.index(data,logman.LoggedIn())
 
     def POST(self, domain):
         # verify the cookie is not set to the current session.
@@ -261,7 +297,7 @@ class ask_question:
         if str(c) == str(session_uuid):
             print "user submitted again to same session"
             return renderer.duplicate(urls['user']['url_pattern']
-                                      .replace('$', '') % domain)
+                                      .replace('$', '') % domain,logman.LoggedIn())
         else:
             web.setcookie('session_uuid', session_uuid, 3600)
 
@@ -281,15 +317,115 @@ class ask_question:
         finally:
             new_input.release()
         return renderer.submit(urls['user']['url_pattern']
-                               .replace('$', '') % domain)
+                               .replace('$', '') % domain,logman.LoggedIn())
 
-							   
-# --- Home page and new login system ---
-class home:
-	def GET(self):
-		return renderer.home()
-
+							
+							
+### ---- NEW LOGIN SYSTEM ---- ###
+class loginmanager:
 	
+	# creates random string of letters and digits for extra unique hashing
+	def RandomString(self,N):
+		r = ""
+		for i in range(0, N):
+			r += random.choice(string.ascii_lowercase + string.digits)
+		return r
+	
+	# create session in qv_sessions and create cookies
+	def Login(self,user):
+		sesunhash_tmp = user + str(datetime.datetime.utcnow()) + self.RandomString(10)
+		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
+		try:
+			# create session in qv_sessions
+			qv_sessions.insert({'createdAt' : datetime.datetime.utcnow(), 'Username' : user, 'QV_Ses' : seshash_tmp})
+		except:
+			print "Session Creation Failed!"
+			return False
+		# create session cookies
+		web.setcookie('QV_Usr',user)
+		web.setcookie('QV_Ses',seshash_tmp)
+		return True
+	
+	# Check if user is logged into system
+	def LoggedIn(self):
+		# Retrieve information stored in cookies
+		usr = web.cookies().get('QV_Usr')
+		ses = web.cookies().get('QV_Ses')
+		
+		# test if cookies existed
+		if usr != None and ses != None:
+			# retrieve session info for usr
+			rec = qv_sessions.find_one({'Username' : usr})
+			
+			# test if session information matches
+			if rec != None:
+				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
+					print "Logged In"
+					return True
+		return False
+	
+	# Logout user
+	def Logout(self):
+		# Retrieve information stored in cookies
+		usr = web.cookies().get('QV_Usr')
+		ses = web.cookies().get('QV_Ses')
+		
+		# test if cookies existed
+		if usr != None and ses != None:
+			# retrieve session info for usr
+			rec = qv_sessions.find_one({'Username' : usr})
+			
+			# test if session information matches
+			if rec != None:
+				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
+					# Remove session from mongodb
+					qv_sessions.delete_one({'Username' : usr})
+					
+					# overwrite cookie data as blank
+					web.setcookie('QV_Usr','')
+					web.setcookie('QV_Ses','')
+					
+					print "Logged Out"
+					return True
+		print "Logout failed!"
+		return False
+	
+		
+logman = loginmanager()		
+
+
+class mainlogin:
+	def GET(self):
+		if logman.LoggedIn():
+			logman.Logout()
+		return renderer.mainlogin(logman.LoggedIn())
+	
+	def POST(self):
+		var = web.input()
+		
+		# check for alphanumeric inputs for username
+		if var['Username'].isalnum() == False:
+			if var['Username'].isalpha() == False:
+				if var['Username'].isdigit() == False:
+					return "Username is invalid! Use only Letters and Digits e.g. Derek123"
+		
+		# look for username within login collection
+		record = qv_logins.find_one({'Username' : var['Username']})
+		if record == None:
+			return "User does not exist!"
+		
+		# hash submited password and compare to record
+		if hmac.compare_digest(record['Password'].encode("utf-8"),hmac.new('QVkey123',var['Password'],hashlib.sha512).hexdigest()):
+			
+			# create login session, redirect if success
+			if logman.Login(var['Username']):
+				# send user to index page
+				web.seeother('/')
+		else:
+			return "Username or Password is Incorrect!"
+		
+### END
+
 class login:
 
     def GET(self, domain, admin_url):
@@ -334,7 +470,7 @@ class editor:
 
         data['existing_questions'] = qsd
 
-        return renderer.editor(data)
+        return renderer.editor(data,logman.LoggedIn())
 
 
 class admin:
@@ -363,7 +499,7 @@ class admin:
 
         data['existing_questions'] = qsd
 
-        return renderer.admin(data)
+        return renderer.admin(data,logman.LoggedIn())
 
 
 class view:
@@ -396,7 +532,7 @@ class view:
 
         data['existing_questions'] = qsd
 
-        return renderer.view(data)
+        return renderer.view(data,logman.LoggedIn())
 
 
 class small:
@@ -415,7 +551,7 @@ class small:
             'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
         }
 
-        return renderer.small(data)
+        return renderer.small(data,logman.LoggedIn())
 
 
 class history:
@@ -434,7 +570,7 @@ class history:
             'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
         }
 
-        return renderer.history(data)
+        return renderer.history(data,logman.LoggedIn())
 
 
 
