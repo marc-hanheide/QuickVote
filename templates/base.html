@@ -4,7 +4,7 @@ $def with (page, vars=None)
 	<head>
 		<meta charset="utf-8">
 		<title>$page.title</title>
-
+		
 		<link rel="icon" href="/static/qv_logo.ico" type="image/x-icon" />
 		<link rel="shortcut icon" href="/static/qv_logo.ico" type="image/x-icon" />
 
@@ -21,7 +21,10 @@ $def with (page, vars=None)
 		<!-- Bootstrap alerts, see: http://bootboxjs.com/documentation.html -->
 		<script type="text/javascript" src="/static/js/bootbox.min.js"></script>
 		<link href="/static/css/style.css" rel="stylesheet" />
-
+		
+		<link type="text/css" rel="stylesheet" href="/static/css/tables.css" />
+				
+				
 		<link href="/static/css/bootstrap-toggle.min.css" rel="stylesheet" />
 		<script type="text/javascript" src="/static/js/bootstrap-toggle.min.js"></script>
 
@@ -36,7 +39,6 @@ $def with (page, vars=None)
 	        			<button class="btn btn-warning"
 		    		        onclick="location.reload();">Reload
 	    				</button>
-						$:page.loggedIn
 						$if page.loggedIn == "True":
 							<button class="btn btn-warning"
 								onclick="location.assign('/login');"

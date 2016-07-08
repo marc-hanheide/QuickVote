@@ -38,7 +38,13 @@ $var loggedIn: $:LI
 					type: "POST",
 					data: data,
 					success: function(reply) {
+						if (reply == "Success") {
+							location.assign('/');
+							return
+						}
 						$$("#reply").text(reply);
+						
+						
 					}
 					});
 					return false;

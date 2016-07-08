@@ -1,0 +1,9 @@
+table.domain {
+	width:100%;
+}
+table.domain tr.panel-heading {
+	background:#f5f5f5;
+}
+table.domain th, table.domain td {
+	padding:5px;
+}
