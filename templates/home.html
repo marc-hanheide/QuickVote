@@ -10,10 +10,10 @@ $var loggedIn: $:IL
 			</div>
 			<div class="panel-body">
 				<div class="col-md-12">
-					<table class="domain panel panel-default">
-						<tr class="domain panel-heading"><th>Domain Name</th><th>Last Active</th></tr>
+					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
 					$for element in DL:
-						<tr><td><a href="/$:element/">$:element</a></td><td>placeholder</td></tr>
+						<a class="panel-title domain" href="/$:element/manage">$:element</a>
+						<p class="domain">Last Active: xx:xx xx/xx/xx | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
 					</table>
 				</div>
 			</div>
@@ -23,14 +23,15 @@ $var loggedIn: $:IL
 	<div class="row">
         <div class="panel panel-default">
         <div class="panel-heading">
-        <h3 class="panel-title">List of Domains</h3>
+        <h3 class="panel-title">List of all Domains</h3>
         </div>
         <div class="panel-body">
             <div class="col-md-12">
-				<table class="domain panel panel-default">
-					<tr class="domain panel-heading"><th>Domain Name</th><th>Last Active</th></tr>
+				<p>Listed Bellow are all of the domains currently being hosted. Follow the domain name link to submit
+				an answer to the active question on that domain. The domains bellow are listed by the most active first. This can be because it was edited recently or because the current question has recently been answered.</p>
 				$for element in DL:
-					<tr><td><a href="/$:element/">$:element</a></td><td>placeholder</td></tr>
+					<a class="panel-title domain" href="/$:element/">$:element</a>
+					<p class="domain">Last Active: xx:xx xx/xx/xx | Active Question: xxxx xxxx xxxx xxxx?</p>
 				</table>
 			</div>
 		</div>
