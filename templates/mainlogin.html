@@ -11,7 +11,7 @@ $var loggedIn: $:LI
 
                 <div class="col-md-12">
                         
-			<form role="form" id="loginform">
+			<form role="form" id="loginform" method="submit">
 				<div class="form-group">
 
 					<label for="Username">
@@ -32,7 +32,18 @@ $var loggedIn: $:LI
 			</form>
 			<p id="reply" style="color:rgb(255,0,0);margin-top:10px;"></p>
 			<script>
-				$$("#Submit").click(function() {
+				$$("#Submit").click(submit);
+				$$("#password").keydown(function(event) {
+					if (event.which == 13) {
+						submit();
+					}
+				});
+				$$("#username").keydown(function(event) {
+					if (event.which == 13) {
+						submit();
+					}
+				});
+				function submit() {
 					var data = $$("#loginform").serialize();
 					$$.ajax({
 					type: "POST",
@@ -48,7 +59,7 @@ $var loggedIn: $:LI
 					}
 					});
 					return false;
-				});
+				}
 			</script>
 		</div>
 	</div>

@@ -7,3 +7,13 @@ table.domain tr.panel-heading {
 table.domain th, table.domain td {
 	padding:5px;
 }
+a.domain {
+	text-decoration:none;
+	font-size:1.8em;
+	display:block;
+}
+p.domain {
+	font-size:0.8em;
+	color:#555;
+	margin-top:-0.4em;
+}
