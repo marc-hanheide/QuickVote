@@ -1,0 +1,60 @@
+$def with (domain, LI)
+$var title: $:domain 
+$var loggedIn: $:LI
+ 
+	<div class="row">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+        <h3 class="panel-title">Permission management options for $:domain</h3>
+        </div>
+        <div class="panel-body">
+			<div class="col-md-12">
+					
+			<div class="form-group">
+
+				<label for="Username">
+					Domain Name
+				</label>
+				<input type="text" class="form-control" name="Username" id="username" placeholder="Enter New Domain Name" value="$:domain"/>
+				<a class="domain" href="/$:domain/editor">Edit Domain Questions</a>
+				<a class="domain" href="/$:domain/view">View Active Question</a>
+				<a class="domain" href="/$:domain/history">Review Past Votes</a>
+			</div>
+				
+			
+			<button type="button" class="btn btn-default" id="Submit">
+                Login
+            </button>
+			<p id="reply" style="color:rgb(255,0,0);margin-top:10px;"></p>
+			<script>
+				$$("#Submit").click(submit);
+				$$("#password").keydown(function(event) {
+					if (event.which == 13) {
+						submit();
+					}
+				});
+				$$("#username").keydown(function(event) {
+					if (event.which == 13) {
+						submit();
+					}
+				});
+				function submit() {
+					var data = $$("#loginform").serialize();
+					$$.ajax({
+					type: "POST",
+					data: data,
+					success: function(reply) {
+						if (reply == "Success") {
+							location.assign('/');
+							return
+						}
+						$$("#reply").text(reply);
+						
+						
+					}
+					});
+					return false;
+				}
+			</script>
+		</div>
+	</div>

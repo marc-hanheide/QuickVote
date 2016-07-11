@@ -42,6 +42,12 @@ urls = {
 	 'class'	: 'home',
 	 'method'	: 'get'
 	 },
+	# manage domain
+	'manage':
+	{'pattern' 	: '/(.+)/manage',
+	 'class'	: 'manage',
+	 'method'	: 'get'
+	},
 	# login page
 	 'mainlogin':
 	{'pattern'	: '/login',
@@ -432,6 +438,25 @@ class loginmanager:
 		print "Logout failed!"
 		return False
 	
+	def DomainLogin(self,domain):
+		# check logged in
+		if not logman.LoggedIn():
+			print "Failed Login!"
+			return False
+		
+		# check for valid domain
+		if not qv_domains.is_domain(domain):
+			print "Failed domain check!"
+			return False
+		
+		# check that user has access to this domain
+		attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
+		if  attempt_at_access == "Admin" or attempt_at_access == "Coord" or attempt_at_access == "Editor":
+			print "Authourized"
+			return True
+		else:
+			print "Failed Access!"
+			return False
 		
 logman = loginmanager()		
 
@@ -476,6 +501,16 @@ class home:
 		return renderer.home(domain_list,logman.LoggedIn())
 
 ### END
+
+### ---- DOMAIN MANAGEMENT ---- ###
+class manage:
+	def GET(self,domain):
+		if logman.LoggedIn() == True:
+			return renderer.manage(domain,logman.LoggedIn())
+		else:
+			return web.seeother('/login')
+### END
+
 
 class login:
 
@@ -579,11 +614,13 @@ class view:
     def GET(self, domain):
         # verify the cookie is not set to the current session.
         # in that case it would be a resubmission
-        if not qv_domains.is_admin(domain):
-            return web.notacceptable()
-
-        uuid = qv_domains.get_active_question(domain)
-        data = {
+        #if not qv_domains.is_admin(domain):
+        #    return web.notacceptable()
+		if not logman.DomainLogin(domain):
+			return web.notacceptable()
+		
+		uuid = qv_domains.get_active_question(domain)
+		data = {
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
@@ -598,13 +635,13 @@ class view:
             'history_url': urls['history']['url_pattern'] % (domain),
         }
 
-        qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
+		qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
 
-        qsd = [q for q in qs]
+		qsd = [q for q in qs]
 
-        data['existing_questions'] = qsd
+		data['existing_questions'] = qsd
 
-        return renderer.view(data,logman.LoggedIn())
+		return renderer.view(data,logman.LoggedIn())
 
 
 class small:
@@ -631,18 +668,21 @@ class history:
     def GET(self, domain):
         # verify the cookie is not set to the current session.
         # in that case it would be a resubmission
-        if not qv_domains.is_admin(domain):
-            return web.notacceptable()
-
-        uuid = qv_domains.get_active_question(domain)
-        data = {
+        #if not qv_domains.is_admin(domain):
+        #    return web.notacceptable()
+		if not logman.DomainLogin(domain):
+			return web.notacceptable()
+		
+		
+		uuid = qv_domains.get_active_question(domain)
+		data = {
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
             'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
-        }
+		}
 
-        return renderer.history(data,logman.LoggedIn())
+		return renderer.history(data,logman.LoggedIn())
 
 
 
