@@ -230,7 +230,7 @@ class domain_manager:
 					'lastEditedBy': "N/A",
 					'admin_url': str(uuid4()),
 					'active_question': None,
-					'users' : {'Admin' : 'Admin'}
+					'users' : [['Admin' , 'Admin']]
 				}
 			)
 
