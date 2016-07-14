@@ -1,4 +1,4 @@
-$def with (DL,IL)
+$def with (DL,IL,A)
 $var title: Quick Vote Home
 $var loggedIn: $:IL
 
@@ -13,8 +13,11 @@ $var loggedIn: $:IL
 					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
 					$for element in DL:
 						<a class="panel-title domain" href="/$:element[0]/manage">$:element[0]</a>
-						<p class="domain">Last Active: xx:xx xx/xx/xx | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
-					</table>
+						<p class="domain">Last Active: $:element[1] | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
+					$if A:
+						<div class="form-group">
+							<button class="btn btn-primary btn-lg btn-block">New Domain</button>
+						</div>
 				</div>
 			</div>
 			</div>
@@ -31,7 +34,7 @@ $var loggedIn: $:IL
 				$for element in DL:
 					<a class="panel-title domain" href="/$:element[0]/">$:element[0]</a>
 					<p class="domain">Last Active: $:element[1] | Active Question: $:element[2]</p>
-				</table>
+
 			</div>
 		</div>
 		</div>
