@@ -1,4 +1,4 @@
-$def with (domain, LI, A, Access)
+$def with (domain, LI, A, Access, Editors, Coordinators)
 $var title: $:domain
 $var loggedIn: $:LI
 
@@ -20,7 +20,7 @@ $if A:
 						<button type="button" class="btn btn-default" id="Submit">
 								Save
 						</button>
-						<p id="reply" style="color:rgb(255,0,0);margin-top:10px;"></p>
+
 				</div>
 			</div>
 		</div>
@@ -58,19 +58,95 @@ $if A or Access == "Coord":
 								Users with Editor Permissions
 							</label>
 							<div class="form-group">
-								<input type="text" class="form-control" name="Username" id="username" style="width:91.666%;float:left;"placeholder="Enter New Domain Name" value="$:domain"/>
-								<button style="color:#ff0000;float:right;width:7%;min-width:50px;" class="btn btn-default"><span style="width:100%;text-align:center;" class="glyphicon glyphicon-remove"></span></button>
+
+									<form id="editor-usr">
+
+									</form>
+									<script>
+										var unique_id_number = -1;
+
+										function CreateId(start) {
+											unique_id_number++;
+											return start + unique_id_number
+										}
+
+										// list of editors from db
+										var editors = [
+											$if Editors != None:
+												$for i in Editors:
+													"$:i",
+											""
+										];
+
+										/* Send usr list to server */
+										function CoordSendUsrs() {
+											var eles = $$("#editor-usr").children();
+											data = "";
+											// all inputs except the empty end input
+											for (var i = 0; i < eles.length-1; i++) {
+												if (i != 0) {
+													data += "&";
+												}
+												data += i+"="+ eles[i].value;
+											}
+											$$.ajax({
+											type: "POST",
+											data: data,
+											url:	"/$:domain/manage/update",
+											success: function(reply) {
+													$$("#reply").fadeOut("slow",
+														$$("#reply").text(reply,
+															$$("#reply").fadeIn("slow")
+														)
+													);
+													return;
+												}
+												//$$("#reply").text(reply);
+
+										});
+									}
+										/* Check state of input in list*/
+										function EditList() {
+											// check content of children of usr list
+											var eles = $$("#editor-usr").children();
+											for (var i = 0; i < eles.length; i++) {
+												// delete empty inputs if not last element
+												if (eles[i].value == "" && i != eles.length - 1) {
+													$$("#"+eles[i].id).fadeOut("slow" ,$$("#"+eles[i].id).remove());
+												}
+												// add new input if last element is not empty
+												if (i == eles.length - 1 && eles[i].value != "") {
+													InsertListInput("");
+												}
+											}
+										}
+
+										function InsertListInput(value) {
+											var id = CreateId("usr");
+											$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
+										}
+										// output list when ready
+										$$("document").ready(function() {
+
+											for(var i = 0; i < editors.length; i++) {
+												InsertListInput(editors[i]);
+											}
+										});
+
+									</script>
 							</div>
-							<button type="button" class="btn btn-primary" id="Submit">
+							<button type="button" class="btn btn-primary" onclick="CoordSendUsrs();">
 									Submit Changes
 							</button>
 						</div>
 
 
-						<p id="reply" style="color:rgb(255,0,0);margin-top:10px;"></p>
+
 				</div>
 			</div>
+			<p id="reply"></p>
 		</div>
+
 	</div>
 	<script>
 		$$("#Submit").click(submit);

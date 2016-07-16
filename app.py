@@ -48,6 +48,11 @@ urls = {
 	 'class'	: 'manage',
 	 'method'	: 'get'
 	},
+	'MainageDomainUsers':
+	{'pattern' 	: '/(.+)/manage/update',
+	 'class'	: 'MainageDomainUsers',
+	 'method'	: 'post'
+	},
 	# login page
 	 'mainlogin':
 	{'pattern'	: '/login',
@@ -361,9 +366,36 @@ class domain_manager:
 			rec = self.domain_coll.update_one({'name' : domain},{'$set' : {'lastActive' : datetime.now()}})
 			print "Domain Active - " + str(datetime.now())
 
+	# retrieve a list of editors for coordinators to manage
 	def get_list_of_editors(self,domain):
 		if self.is_domain(domain):
-			 recs = self.domain_coll.find_one({"name" : domain})
+			recs = self.domain_coll.find_one({"name" : domain})
+			usr_list = []
+			for l in recs['users']:
+				if l[1] == 'Editor':
+					usr_list.append(l[0])
+			print usr_list
+			if len(usr_list) == 0:
+				return None
+			return usr_list
+		return None
+
+	# update the list of editors from list sent through domain manager, return false if failed to update else true
+	def update_list_of_editors(self,domain,editor_list):
+		if self.is_domain(domain):
+			recs = self.domain_coll.find_one({"name" : domain})
+			updated_list = []
+			for r in recs['users']:
+				if r[1] == 'Coord' or r[1] == 'Admin':
+					updated_list.append(r)
+
+			for r in range(len(editor_list)):
+				updated_list.append([editor_list[str(r)],"Editor"])
+			print updated_list
+			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
+			return True
+		return False
+
 qv_domains = domain_manager(qv_db)
 
 
@@ -562,8 +594,33 @@ class manage:
 	def GET(self,domain):
 		if logman.LoggedIn() == True:
 			if qv_domains.is_domain(domain):
-				return renderer.manage(domain,True,logman.isAdmin(),qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')))
+				return renderer.manage(
+					domain, 														# name of domain to manage (string)
+					True,															# is user logged in? (boolean)
+					logman.isAdmin(),												# is user and Admin? (boolean)
+					qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')),	# Access that user has to domain (string)
+					qv_domains.get_list_of_editors(domain),							# list of editors for domain (string[] / None)
+					None															# list of coordinators for domain (string[] / None)
+				)
 		return web.seeother('/login')
+
+class MainageDomainUsers:
+	def POST(self,domain):
+
+		data = web.input()
+		if logman.LoggedIn():
+			#if logman.isAdmin():
+			#	# update editors and coordinators
+			#	return "Admin update not complete"
+			#else:
+
+			# update editors in list
+			print data["0"]
+			if qv_domains.update_list_of_editors(domain,data):
+				return "Successful!"
+			return "Failed! You are not logged in!"
+
+
 ### END
 
 
