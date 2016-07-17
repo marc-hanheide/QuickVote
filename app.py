@@ -186,7 +186,7 @@ if qv_logins.find().count() == 0:
 
 # new login session
 qv_sessions = qv_db['sessions']
-qv_sessions.create_index([('createdAt',pymongo.DESCENDING)],expireAfterSeconds=60*60)
+qv_sessions.create_index([('createdAt',pymongo.DESCENDING)],expireAfterSeconds=24*60*60)
 qv_sessions.create_index([('Username',pymongo.DESCENDING)],unique=True)
 ### END
 
