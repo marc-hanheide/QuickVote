@@ -380,6 +380,13 @@ class domain_manager:
 			return usr_list
 		return None
 
+	# retrieve a list of user for admins to manage
+	def get_list_of_users(self,domain):
+		if self.is_domain(domain):
+			recs = self.domain_coll.find_one({"name" : domain})
+			return recs['users']
+		return None
+
 	# update the list of editors from list sent through domain manager, return false if failed to update else true
 	def update_list_of_editors(self,domain,editor_list):
 		if self.is_domain(domain):
@@ -392,6 +399,16 @@ class domain_manager:
 			for r in range(len(editor_list)):
 				updated_list.append([editor_list[str(r)],"Editor"])
 			print updated_list
+			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
+			return True
+		return False
+
+	# update the list of all users from list sent through domain manager, return false if failed to update else true
+	def update_list_of_all(self,domain,usr_list):
+		if self.is_domain(domain):
+			updated_list = []
+			for r in range(len(usr_list)/2):
+				updated_list.append([usr_list[str(r)],usr_list["drop" + str(r)]])
 			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
 			return True
 		return False
@@ -529,7 +546,7 @@ class loginmanager:
 
 		# check that user has access to this domain
 		attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
-		if  attempt_at_access == "Admin" or attempt_at_access == "Coord" or attempt_at_access == "Editor":
+		if  logman.isAdmin() or attempt_at_access == "Coord" or attempt_at_access == "Editor":
 			print "Authourized"
 			return True
 		else:
@@ -594,14 +611,33 @@ class manage:
 	def GET(self,domain):
 		if logman.LoggedIn() == True:
 			if qv_domains.is_domain(domain):
+				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Coord":
+					return renderer.manage(
+						domain, 														# name of domain to manage (string)
+						True,															# is user logged in? (boolean)
+						logman.isAdmin(),												# is user and Admin? (boolean)
+						"Coord",														# Access that user has to domain (string)
+						qv_domains.get_list_of_editors(domain),							# list of editors for domain (string[] / None)
+						None															# list of coordinators for domain (string[] / None)
+					)
+				if logman.isAdmin():
+					return renderer.manage(
+						domain, 														# name of domain to manage (string)
+						True,															# is user logged in? (boolean)
+						logman.isAdmin(),												# is user and Admin? (boolean)
+						None,															# Access that user has to domain (string)
+						qv_domains.get_list_of_users(domain),							# list of users for domain (string[[]] / None)
+						None															# list of coordinators for domain (string[] / None)
+					)
 				return renderer.manage(
 					domain, 														# name of domain to manage (string)
 					True,															# is user logged in? (boolean)
 					logman.isAdmin(),												# is user and Admin? (boolean)
-					qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')),	# Access that user has to domain (string)
-					qv_domains.get_list_of_editors(domain),							# list of editors for domain (string[] / None)
+					None,															# Access that user has to domain (string)
+					[""],															# list of editors for domain (string[] / None)
 					None															# list of coordinators for domain (string[] / None)
 				)
+			return web.notfound()
 		return web.seeother('/login')
 
 class MainageDomainUsers:
@@ -616,8 +652,12 @@ class MainageDomainUsers:
 
 			# update editors in list
 			print data["0"]
-			if qv_domains.update_list_of_editors(domain,data):
-				return "Successful!"
+			if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Coord":
+				if qv_domains.update_list_of_editors(domain,data):
+					return "Successful!"
+			if logman.isAdmin():
+				if qv_domains.update_list_of_all(domain,data):
+					return "Admin Successful!"
 			return "Failed! You are not logged in!"
 
 
@@ -661,7 +701,7 @@ class editor:
 
 		# check that user has access to this domain
 		attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
-		if  attempt_at_access == "Admin" or attempt_at_access == "Coord" or attempt_at_access == "Editor":
+		if logman.isAdmin() or attempt_at_access == "Coord" or attempt_at_access == "Editor":
 			print "Authourized"
 		else:
 			print "Failed Access!"

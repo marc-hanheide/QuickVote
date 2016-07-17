@@ -55,7 +55,10 @@ $if A or Access == "Coord":
 						<div class="form-group">
 
 							<label for="Username">
-								Users with Editor Permissions
+								$if Access == "Coord":
+									Manage Editors
+								$if A:
+									Manage All Users
 							</label>
 							<div class="form-group">
 
@@ -74,68 +77,124 @@ $if A or Access == "Coord":
 										var editors = [
 											$if Editors != None:
 												$for i in Editors:
-													"$:i",
-											""
+													$if A:
+														["$:i[0]","$:i[1]"],
+													$else:
+														"$:i",
+											$if A:
+												["","Editor"]
+											$else:
+												""
 										];
 
 										/* Send usr list to server */
-										function CoordSendUsrs() {
-											var eles = $$("#editor-usr").children();
-											data = "";
-											// all inputs except the empty end input
-											for (var i = 0; i < eles.length-1; i++) {
-												if (i != 0) {
-													data += "&";
+										$if Access == "Coord":
+											function CoordSendUsrs() {
+												var eles = $$("#editor-usr").children();
+												data = "";
+												// all inputs except the empty end input
+												for (var i = 0; i < eles.length-1; i++) {
+													if (i != 0) {
+														data += "&";
+													}
+													data += i+"="+ eles[i].value;
 												}
-												data += i+"="+ eles[i].value;
-											}
-											$$.ajax({
-											type: "POST",
-											data: data,
-											url:	"/$:domain/manage/update",
-											success: function(reply) {
-													$$("#reply").fadeOut("slow",
-														$$("#reply").text(reply,
-															$$("#reply").fadeIn("slow")
-														)
-													);
-													return;
-												}
-												//$$("#reply").text(reply);
+												$$.ajax({
+												type: "POST",
+												data: data,
+												url:	"/$:domain/manage/update",
+												success: function(reply) {
+														$$("#reply").fadeOut("slow",
+															$$("#reply").text(reply,
+																$$("#reply").fadeIn("slow")
+															)
+														);
+														return;
+													}
+													//$$("#reply").text(reply);
 
-										});
-									}
+											});
+											}
+										$if A:
+		 									 function AdminSendUsrs() {
+		 										 var eles = $$("#editor-usr").children(".names");
+		 										 data = "";
+		 										 // all inputs except the empty end input
+		 										 for (var i = 0; i < eles.length-1; i++) {
+		 											 if (i != 0) {
+		 												 data += "&";
+		 											 }
+		 											 data += i+"="+ eles[i].value;
+													 data += "&drop"+i+"="+$$("#drop"+eles[i].id).val();
+		 										 }
+		 										 $$.ajax({
+		 										 type: "POST",
+		 										 data: data,
+		 										 url:	"/$:domain/manage/update",
+		 										 success: function(reply) {
+		 												 $$("#reply").fadeOut("slow",
+		 													 $$("#reply").text(reply,
+		 														 $$("#reply").fadeIn("slow")
+		 													 )
+		 												 );
+		 												 return;
+		 											 }
+		 											 //$$("#reply").text(reply);
+
+		 									 });
+		 									 }
+
 										/* Check state of input in list*/
 										function EditList() {
 											// check content of children of usr list
-											var eles = $$("#editor-usr").children();
+											var eles = $$("#editor-usr").children(".names");
 											for (var i = 0; i < eles.length; i++) {
 												// delete empty inputs if not last element
 												if (eles[i].value == "" && i != eles.length - 1) {
 													$$("#"+eles[i].id).fadeOut("slow" ,$$("#"+eles[i].id).remove());
+
+													$if A:
+														$$("#drop"+eles[i].id).fadeOut("slow" ,$$("#"+eles[i].id).remove());
 												}
+
 												// add new input if last element is not empty
 												if (i == eles.length - 1 && eles[i].value != "") {
 													InsertListInput("");
 												}
+
 											}
 										}
-
-										function InsertListInput(value) {
-											var id = CreateId("usr");
-											$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
-										}
+										$if Access == "Coord":
+											function InsertListInput(value) {
+												var id = CreateId("usr");
+												$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
+											}
+										$if A:
+											function InsertListInput(value,role) {
+												var id = CreateId("usr");
+												$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;float:left;width:70%;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
+												$$('#editor-usr').append($$("<select id=\"drop"+id+"\" style=\"margin-top:5px;margin-left:1%;float:left;width:29%;\" class=\"btn btn-default\"><option value=\"Editor\">Editor</option><option value=\"Coord\">Coordinator</option></select>").hide().fadeIn("slow"));
+												$$("#drop"+id).val(role);
+											}
 										// output list when ready
 										$$("document").ready(function() {
 
 											for(var i = 0; i < editors.length; i++) {
-												InsertListInput(editors[i]);
+												$if Access == "Coord":
+													InsertListInput(editors[i]);
+												$if A:
+													InsertListInput(editors[i][0],editors[i][1]);
 											}
 										});
 
 									</script>
 							</div>
-							<button type="button" class="btn btn-primary" onclick="CoordSendUsrs();">
+							<button type="button" class="btn btn-primary" style="float:right;margin-top:15px;"
+							$if Access == "Coord":
+								onclick="CoordSendUsrs();"
+							$if A:
+								onclick="AdminSendUsrs();"
+							>
 									Submit Changes
 							</button>
 						</div>
