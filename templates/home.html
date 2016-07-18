@@ -13,15 +13,63 @@ $var loggedIn: $:IL
 					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
 					$for element in DL:
 						<a class="panel-title domain" href="/$:element[0]/manage">$:element[0]</a>
-						<p class="domain">Last Active: $:element[1] | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
+						<p class="domain"><a href="#" onclick="removedomain('$:element[0]');" style="color:#ff0000;">delete domain</a> | Last Active: $:element[1] | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
 					$if A:
 						<div class="form-group">
-							<button class="btn btn-primary btn-lg btn-block">New Domain</button>
+							<button id="NewDomainButton" class="btn btn-primary btn-lg btn-block">New Domain</button>
 						</div>
+						<script>
+							var newdom;
+							$$("document").ready(function(){newdom = $$("#newdom"); newdom.hide();});
+							$$("#NewDomainButton").click(function(){
+								newdom.fadeIn("slow");
+
+							});
+							function newdomaincancel() {
+								newdom.fadeOut("slow");
+							}
+							function newdomain() {
+								var d = $$("#newname").val();
+								$$.ajax({
+								type: "POST",
+								url:	"/Add/EditDom/"+d,
+								success: function(reply) {
+									if(reply == "success") {location.assign("/");}
+								}
+								});
+							}
+							function removedomain(val) {
+								$$.ajax({
+								type: "POST",
+								url:	"/Remove/EditDom/"+val,
+								success: function(reply) {
+									if(reply == "success") {location.assign("/");}
+								}
+								});
+							}
+						</script>
 				</div>
 			</div>
 			</div>
 		</div>
+	<div id="newdom" class="row" style="position:fixed;top:25%;left:25%;z-index:1;height:50%;width:50%;">
+		<div class="panel panel-primary" style="height:100%;">
+			<div class="panel-heading">
+				<h3 class="panel-title">Add New Domain</h3>
+			</div>
+			<div class="panel-body" style="height:90%;">
+				<div class="col-md-12" style="height:100%;">
+
+					<label>New Domain Name</label>
+					<input class="form-control" id="newname" placeholder="Enter Domain Name"/>
+					<div style="position:absolute;bottom:15px;right:15px;">
+						<button class="btn btn-primary" onclick="newdomain();">Submit</button>
+						<button class="btn btn-danger" onclick="newdomaincancel();">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div class="row">
 				<div class="panel panel-default">
         <div class="panel-heading">

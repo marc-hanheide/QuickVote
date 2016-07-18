@@ -1,7 +1,7 @@
 $def with (LI)
 $var title: Quick Vote Home
 $var loggedIn: $:LI
- 
+
 	<div class="row">
         <div class="panel panel-default">
         <div class="panel-heading">
@@ -10,7 +10,7 @@ $var loggedIn: $:LI
         <div class="panel-body">
 
                 <div class="col-md-12">
-                        
+
 			<form role="form" id="loginform" method="submit">
 				<div class="form-group">
 
@@ -51,11 +51,11 @@ $var loggedIn: $:LI
 					success: function(reply) {
 						if (reply == "Success") {
 							location.assign('/');
-							return
+							return;
 						}
 						$$("#reply").text(reply);
-						
-						
+
+
 					}
 					});
 					return false;

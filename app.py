@@ -48,6 +48,12 @@ urls = {
 	 'class'	: 'manage',
 	 'method'	: 'get'
 	},
+	# edit / remove / add new domains
+	'EditDom':
+	{'pattern' 	: '/(.+)/EditDom/(.+)',
+	 'class'	: 'EditDom',
+	 'method'	: 'post'
+	},
 	'MainageDomainUsers':
 	{'pattern' 	: '/(.+)/manage/update',
 	 'class'	: 'MainageDomainUsers',
@@ -235,7 +241,7 @@ class domain_manager:
 					'lastEditedBy': "N/A",
 					'admin_url': str(uuid4()),
 					'active_question': None,
-					'users' : [['Admin' , 'Admin']]
+					'users' : []
 				}
 			)
 
@@ -607,6 +613,32 @@ class home:
 ### END
 
 ### ---- DOMAIN MANAGEMENT ---- ###
+class EditDom:
+	# function to add / remove / edit a domain
+	def POST(self,action,domain):
+		if logman.isAdmin():
+			# add domain
+			if action == "Add":
+				# insert new domain
+				qv_domains.domain_coll.insert(
+					{
+						'name': domain,
+						'inserted_at': datetime.now(),
+	                    'lastActive': datetime.now(),
+						'lastEdited': datetime.now(),
+						'lastEditedBy': "N/A",
+						'admin_url': str(uuid4()),
+						'active_question': None,
+						'users' : []
+					}
+				)
+				print "created" + domain
+				return "success"
+			if action == "Remove":
+				qv_domains.domain_coll.delete_one({'name': domain})
+				print "deleted " + domain
+				return "success"
+		return "failed"
 class manage:
 	def GET(self,domain):
 		if logman.LoggedIn() == True:
