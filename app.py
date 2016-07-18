@@ -13,7 +13,7 @@ import web
 from web import form
 import signal
 from json import dumps
-import pymongo
+from pymongo import DESCENDING
 from pymongo import MongoClient
 from uuid import uuid4
 from datetime import datetime
@@ -180,7 +180,7 @@ qv_questions.create_index('domain')
 
 # new login collection
 qv_logins = qv_db['logins']
-qv_logins.create_index([('Username',pymongo.DESCENDING)],unique=True)
+qv_logins.create_index([('Username',DESCENDING)],unique=True)
 
 # create default login if no login exists
 if qv_logins.find().count() == 0:
@@ -192,8 +192,8 @@ if qv_logins.find().count() == 0:
 
 # new login session
 qv_sessions = qv_db['sessions']
-qv_sessions.create_index([('createdAt',pymongo.DESCENDING)],expireAfterSeconds=24*60*60)
-qv_sessions.create_index([('Username',pymongo.DESCENDING)],unique=True)
+qv_sessions.create_index([('createdAt',DESCENDING)],expireAfterSeconds=24*60*60)
+qv_sessions.create_index([('Username',DESCENDING)],unique=True)
 ### END
 
 
@@ -227,7 +227,7 @@ class domain_manager:
 		self.ensure_debug_domain()
 		self.domain_coll.create_index('name', unique=True)
 		self.domain_coll.create_index('admin_url', unique=True)
-		self.domain_coll.create_index([('lastActive',pymongo.DESCENDING)],unique=False)
+		self.domain_coll.create_index([('lastActive',DESCENDING)],unique=False)
 
 	def ensure_debug_domain(self):
 		# ensure testdomain
