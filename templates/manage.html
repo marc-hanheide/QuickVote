@@ -17,7 +17,19 @@ $if A:
 							</label>
 							<input type="text" class="form-control" name="Username" id="username" placeholder="Enter New Domain Name" value="$:domain"/>
 						</div>
-						<button type="button" class="btn btn-default" id="Submit">
+						<script>
+						function changedomainname() {
+							var d = $$('#username').val();
+							$$.ajax({
+							type: "POST",
+							url:	"/Update/EditDom/"+d,
+							success: function(reply) {
+								if(reply == "success") {location.assign("/"+d+"/manage");}
+							}
+							});
+						}
+						</script>
+						<button type="button" class="btn btn-primary" onclick="changedomainname();">
 								Save
 						</button>
 

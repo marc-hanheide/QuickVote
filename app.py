@@ -7,25 +7,23 @@ if len(abspath) > 0:
     sys.path.append(abspath)
     os.chdir(abspath)
 
-#from flask import Flask, render_template, request, jsonify, Blueprint
+# common imports
+from modules.common import *
+import modules.glob as glob
+
 
 import web
 from web import form
+
 import signal
 from json import dumps
-from pymongo import DESCENDING
-from pymongo import MongoClient
-from uuid import uuid4
-from datetime import datetime
+
 from bson import json_util
-from threading import Condition
+
 import httpagentparser
 from os import _exit
 import time
-import math
 
-
-import config
 
 # hashing
 import hmac
@@ -34,6 +32,10 @@ import random
 import string
 
 from urlparse import urlparse
+
+# import modules
+from modules import domains
+from modules.logins import *
 
 urls = {
 	# display filterable list of domains
@@ -129,72 +131,7 @@ urls = {
 }
 
 
-# urls = (
-#     '/(.+)/', 'ask_question',           # arg1 is the domain (questionnaire)
-#     '/(.+)/view', 'view',               # arg1 is the domain
-#                                        #(returns results for current question)
-#     '/(.+)/(.+)/editor', 'editor',    # arg1 is the domain, arg2 the admin_url
 
-#     # The following are API access points
-#     '/api/(.+)/(.+)/q', 'questions',    # for POSTs to edit questions
-#                                         # (uuid in payload)
-#                                         # arg1: domain, arg2: admin_url
-#     '/api/q/(.+)', 'questions',         # for GETs to retrieve question data
-#                                         # arg1 is uuid of question
-#     '/api/r/(.+)', 'results',           # GET: arg1 is uuid of the question
-#     '/api/(.+)/a', 'ask_question',      # arg1 is the domain (POST only)
-# )
-
-# question_global = {
-#     'uuid': uuid4(),
-#     'question': "What is the meaning of live?",
-#     'answers': ['A', 'B', 'C', 'D'],
-#     'correct': ['A, B']
-# }
-
-# the session UUID is used to determine
-# if a client had already submitted an answer
-
-session_uuid = uuid4()
-admin_uuid = uuid4()
-
-client = MongoClient(config.mongo_host, config.mongo_port)
-
-new_input = Condition()
-
-qv_db = client['QuickVote']
-
-qv_collection = qv_db['answers']
-qv_collection.create_index('uuid')
-qv_collection.create_index('session')
-qv_collection.create_index('domain')
-qv_collection.create_index('inserted_at')
-
-qv_questions = qv_db['questions']
-qv_questions.create_index('uuid', unique=True)
-qv_questions.create_index('domain')
-
-
-
-### ---- NEW LOGIN SYSTEM MONGODB ---- ###
-
-# new login collection
-qv_logins = qv_db['logins']
-qv_logins.create_index([('Username',DESCENDING)],unique=True)
-
-# create default login if no login exists
-if qv_logins.find().count() == 0:
-	qv_logins.insert({
-		'Username' : 'Admin',
-		'Password' : hmac.new('QVkey123','1234',hashlib.sha512).hexdigest(),
-		'isAdmin'  : True
-	})
-
-# new login session
-qv_sessions = qv_db['sessions']
-qv_sessions.create_index([('createdAt',DESCENDING)],expireAfterSeconds=24*60*60)
-qv_sessions.create_index([('Username',DESCENDING)],unique=True)
-### END
 
 
 
@@ -220,206 +157,9 @@ for v in urls.values():
     print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
 
 
-class domain_manager:
 
-	def __init__(self, db):
-		self.domain_coll = db['domains']
-		self.ensure_debug_domain()
-		self.domain_coll.create_index('name', unique=True)
-		self.domain_coll.create_index('admin_url', unique=True)
-		self.domain_coll.create_index([('lastActive',DESCENDING)],unique=False)
-
-	def ensure_debug_domain(self):
-		# ensure testdomain
-		if self.domain_coll.find_one({'name': 'debug'}) is None:
-			self.domain_coll.insert(
-				{
-					'name': 'debug',
-					'inserted_at': datetime.now(),
-                    'lastActive': datetime.now(),
-					'lastEdited': datetime.now(),
-					'lastEditedBy': "N/A",
-					'admin_url': str(uuid4()),
-					'active_question': None,
-					'users' : []
-				}
-			)
-
-	def get_name_from_admin_url(self, admin_url):
-		c = self.domain_coll.find_one({'admin_url': admin_url})
-		return c['name'] if c is not None else None
-
-	def is_valid_admin(self, domain, admin_url):
-		true_name = self.get_name_from_admin_url(admin_url)
-		return true_name == domain
-
-	def is_admin(self, domain):
-		c = web.cookies().get("quuid_" + domain)
-		if c is None:
-			return False
-		return self.is_valid_admin(domain, c)
-
-	def get_active_question(self, domain):
-		c = self.domain_coll.find_one({'name': domain})
-		return c['active_question'] if c is not None else None
-
-	def set_active_question(self, domain, uuid):
-		global session_uuid
-		c = self.domain_coll.find_one({'name': domain})
-		if c is None:
-			raise RuntimeError('domain %s not in database' % domain)
-		c['active_question'] = uuid
-		self.domain_coll.save(c)
-		session_uuid = self.get_active_session(domain, uuid)
-
-	def set_active_session(self, domain, quuid, suuid=None):
-		global session_uuid
-		c = self.domain_coll.find_one({'name': domain})
-		if c is None:
-			raise RuntimeError('domain %s not in database' % domain)
-		if 'session' not in c:
-			print "NOT IN YET"
-			c['session'] = {}
-		if suuid is None:
-			suuid = str(uuid4())
-		c['session'][quuid] = suuid
-		session_uuid = suuid
-		self.domain_coll.save(c)
-		return suuid
-
-
-
-	def get_active_session(self, domain, quuid):
-		c = self.domain_coll.find_one({'name': domain})
-		if 'session' not in c:
-			c['session'] = {}
-
-		if quuid not in c['session']:
-			return self.set_active_session(domain, quuid)
-
-		return c['session'][quuid]
-
-
-	# Check that domain exists
-	def is_domain(self,domain):
-		# ensure domain is safe (alphanumeric)
-		if domain.isalnum() == False:
-			if domain.isalpha() == False:
-				if domain.isdigit() == False:
-					return False
-
-		# test if domain exists
-		if self.domain_coll.find_one({'name' : domain}) == None:
-			return False
-		return True
-
-	# Test if user has access to domain and what that access is
-	def Access_domain(self,domain,user):
-		# check domain exists
-		if not self.is_domain(domain):
-			return None
-		# get user's access from domain
-		print "finding - " + str('users.'+user)
-		access = self.domain_coll.find_one({'name' : domain, 'users' : {"$exists" : True}})
-
-		# return user's level of access or none
-		if access == None:
-			print "Access Denied!"
-			return None
-
-		usr_exists = False
-		permission = ""
-		try:
-			for i in access['users']:
-				print i
-				if i[0] == user:
-					usr_exists = True
-					permission = i[1]
-					break
-		except:
-			return None
-
-		if usr_exists:
-			print permission
-			self.DomainActive(domain)   # Update last active time of domain
-			return permission
-		else:
-			return None
-
-			# Get names of all domains
-	def get_list_of_domains(self):
-		rec = self.domain_coll.find({'lastActive' : {'$exists' : True}})
-		if rec == None:
-			return None
-		list = []
-		for r in rec:
-			tst = abs(datetime.now() - r['lastActive'])
-			td = int(tst.days) # days
-			th = int(math.floor(tst.total_seconds()/(60*60))) # hours
-			tm = int(math.floor((tst.total_seconds()/60)%60)) # minutes
-			print "{} days, {} hrs, {} mins".format(td,th,tm)
-			q = ""
-			if r['active_question'] == None:
-				q = "N/A"
-			else:
-				q = qv_questions.find_one({'uuid' : r['active_question']})['question']
-			list.append([r['name'],"{} days {} hrs {} mins".format(td,th,tm),q])
-		return list
-
-	# update last active time of domain
-	def DomainActive(self,domain):
-		if self.is_domain(domain):
-			rec = self.domain_coll.update_one({'name' : domain},{'$set' : {'lastActive' : datetime.now()}})
-			print "Domain Active - " + str(datetime.now())
-
-	# retrieve a list of editors for coordinators to manage
-	def get_list_of_editors(self,domain):
-		if self.is_domain(domain):
-			recs = self.domain_coll.find_one({"name" : domain})
-			usr_list = []
-			for l in recs['users']:
-				if l[1] == 'Editor':
-					usr_list.append(l[0])
-			print usr_list
-			if len(usr_list) == 0:
-				return None
-			return usr_list
-		return None
-
-	# retrieve a list of user for admins to manage
-	def get_list_of_users(self,domain):
-		if self.is_domain(domain):
-			recs = self.domain_coll.find_one({"name" : domain})
-			return recs['users']
-		return None
-
-	# update the list of editors from list sent through domain manager, return false if failed to update else true
-	def update_list_of_editors(self,domain,editor_list):
-		if self.is_domain(domain):
-			recs = self.domain_coll.find_one({"name" : domain})
-			updated_list = []
-			for r in recs['users']:
-				if r[1] == 'Coord' or r[1] == 'Admin':
-					updated_list.append(r)
-
-			for r in range(len(editor_list)):
-				updated_list.append([editor_list[str(r)],"Editor"])
-			print updated_list
-			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
-			return True
-		return False
-
-	# update the list of all users from list sent through domain manager, return false if failed to update else true
-	def update_list_of_all(self,domain,usr_list):
-		if self.is_domain(domain):
-			updated_list = []
-			for r in range(len(usr_list)/2):
-				updated_list.append([usr_list[str(r)],usr_list["drop" + str(r)]])
-			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
-			return True
-		return False
-
-qv_domains = domain_manager(qv_db)
+# get isntance of domain manager
+qv_domains = domains.domain_manager(qv_db)
 
 
 ### Renderers for actual interface:
@@ -433,7 +173,7 @@ class ask_question:
         if qs is not None and 'image' not in qs:
             qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
         data = {'qs': qs,
-                'session_uuid': session_uuid,
+                'session_uuid': glob.session_uuid,
                 'submit_url': urls['user_post']['url_pattern'] % domain,
                 }
         qv_domains.DomainActive(domain)
@@ -443,12 +183,12 @@ class ask_question:
         # verify the cookie is not set to the current session.
         # in that case it would be a resubmission
         c = web.cookies(session_uuid=uuid4()).session_uuid
-        if str(c) == str(session_uuid):
+        if str(c) == str(glob.session_uuid):
             print "user submitted again to same session"
             return renderer.duplicate(urls['user']['url_pattern']
                                       .replace('$', '') % domain,logman.LoggedIn())
         else:
-            web.setcookie('session_uuid', session_uuid, 3600)
+            web.setcookie('session_uuid', glob.session_uuid, 3600)
 
         data = {}
         data.update(web.input())
@@ -471,99 +211,6 @@ class ask_question:
 
 
 ### ---- NEW LOGIN SYSTEM ---- ###
-class loginmanager:
-
-	# creates random string of letters and digits for extra unique hashing
-	def RandomString(self,N):
-		r = ""
-		for i in range(0, N):
-			r += random.choice(string.ascii_lowercase + string.digits)
-		return r
-
-	# create session in qv_sessions and create cookies
-	def Login(self,user):
-		sesunhash_tmp = user + str(datetime.utcnow()) + self.RandomString(10)
-		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
-		try:
-			# create session in qv_sessions
-			qv_sessions.insert({'createdAt' : datetime.utcnow(), 'Username' : user, 'QV_Ses' : seshash_tmp})
-		except:
-			print "Session Creation Failed!"
-			return False
-		# create session cookies
-		web.setcookie('QV_Usr',user)
-		web.setcookie('QV_Ses',seshash_tmp)
-		return True
-
-	# Check if user is logged into system
-	def LoggedIn(self):
-		# Retrieve information stored in cookies
-		usr = web.cookies().get('QV_Usr')
-		ses = web.cookies().get('QV_Ses')
-
-		# test if cookies existed
-		if usr != None and ses != None:
-			# retrieve session info for usr
-			rec = qv_sessions.find_one({'Username' : usr})
-
-			# test if session information matches
-			if rec != None:
-				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
-					print "Logged In"
-					return True
-		return False
-
-	# Logout user
-	def Logout(self):
-		# Retrieve information stored in cookies
-		usr = web.cookies().get('QV_Usr')
-		ses = web.cookies().get('QV_Ses')
-
-		# test if cookies existed
-		if usr != None and ses != None:
-			# retrieve session info for usr
-			rec = qv_sessions.find_one({'Username' : usr})
-
-			# test if session information matches
-			if rec != None:
-				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
-					# Remove session from mongodb
-					qv_sessions.delete_one({'Username' : usr})
-
-					# overwrite cookie data as blank
-					web.setcookie('QV_Usr','')
-					web.setcookie('QV_Ses','')
-
-					print "Logged Out"
-					return True
-		print "Logout failed!"
-		return False
-
-	def DomainLogin(self,domain):
-		# check logged in
-		if not logman.LoggedIn():
-			print "Failed Login!"
-			return False
-
-		# check for valid domain
-		if not qv_domains.is_domain(domain):
-			print "Failed domain check!"
-			return False
-
-		# check that user has access to this domain
-		attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
-		if  logman.isAdmin() or attempt_at_access == "Coord" or attempt_at_access == "Editor":
-			print "Authourized"
-			return True
-		else:
-			print "Failed Access!"
-			return False
-
-	def isAdmin(self):
-		if self.LoggedIn():
-			return qv_logins.find_one({'Username' : web.cookies().get('QV_Usr')})['isAdmin']
-		return False
-
 logman = loginmanager()
 
 
@@ -638,6 +285,11 @@ class EditDom:
 				qv_domains.domain_coll.delete_one({'name': domain})
 				print "deleted " + domain
 				return "success"
+			if action == "Update":
+				rec = qv_domains.domain_coll.find_one({'name': domain})
+				rec["name"] = domain
+				print "changed name to " + domain
+				return "success"
 		return "failed"
 class manage:
 	def GET(self,domain):
@@ -671,7 +323,6 @@ class manage:
 				)
 			return web.notfound()
 		return web.seeother('/login')
-
 class MainageDomainUsers:
 	def POST(self,domain):
 
@@ -691,27 +342,7 @@ class MainageDomainUsers:
 				if qv_domains.update_list_of_all(domain,data):
 					return "Admin Successful!"
 			return "Failed! You are not logged in!"
-
-
 ### END
-
-
-class login:
-
-    def GET(self, domain, admin_url):
-        if not qv_domains.is_valid_admin(domain, admin_url):
-            return web.notacceptable()
-        web.setcookie("quuid_"+domain, admin_url)
-        return web.ok()
-
-
-class logoff:
-
-    def GET(self, domain, admin_url):
-        if not qv_domains.is_valid_admin(domain, admin_url):
-            return web.notacceptable()
-        web.setcookie("quuid_"+domain, admin_url, expires=-1)
-        return web.ok()
 
 
 class editor:
@@ -762,8 +393,6 @@ class editor:
 		data['existing_questions'] = qsd
 
 		return renderer.editor(data,logman.LoggedIn())
-
-
 class admin:
 
     def GET(self, domain):
@@ -791,8 +420,6 @@ class admin:
         data['existing_questions'] = qsd
 
         return renderer.admin(data,logman.LoggedIn())
-
-
 class view:
 
     def GET(self, domain):
@@ -826,6 +453,26 @@ class view:
 		data['existing_questions'] = qsd
 
 		return renderer.view(data,logman.LoggedIn())
+class history:
+
+    def GET(self, domain):
+        # verify the cookie is not set to the current session.
+        # in that case it would be a resubmission
+        #if not qv_domains.is_admin(domain):
+        #    return web.notacceptable()
+		if not logman.DomainLogin(domain):
+			return web.notacceptable()
+
+
+		uuid = qv_domains.get_active_question(domain)
+		data = {
+            'uuid': uuid,
+            'domain': domain,
+            'vote_url': config.base_url+domain+'/',
+            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+		}
+
+		return renderer.history(data,logman.LoggedIn())
 
 
 class small:
@@ -847,26 +494,6 @@ class small:
         return renderer.small(data,logman.LoggedIn())
 
 
-class history:
-
-    def GET(self, domain):
-        # verify the cookie is not set to the current session.
-        # in that case it would be a resubmission
-        #if not qv_domains.is_admin(domain):
-        #    return web.notacceptable()
-		if not logman.DomainLogin(domain):
-			return web.notacceptable()
-
-
-		uuid = qv_domains.get_active_question(domain)
-		data = {
-            'uuid': uuid,
-            'domain': domain,
-            'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
-		}
-
-		return renderer.history(data,logman.LoggedIn())
 
 
 
