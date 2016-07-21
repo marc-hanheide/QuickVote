@@ -1,0 +1,165 @@
+$def with (IL,usrs)
+$var title: Quick Vote Manage Users
+$var loggedIn: $:IL
+
+<div class="row">
+	<div class="panel panel-default">
+	<div class="panel-heading">
+	<h3 class="panel-title">List of Users</h3>
+	</div>
+	<div class="panel-body">
+		<div class="col-md-12">
+			<script>
+
+				var newusr;
+				var cpass;
+				$$("document").ready(function(){newusr = $$("#newusr");newusr.hide();cpass = $$("#cpass");cpass.hide();});
+				function makeadmin(usr) {
+					$$.ajax({
+					type: "POST",
+					data: "action=MUA&usr="+usr,
+					success: function(reply) {
+						if(reply == "Success") {location.assign("/users");}
+					}
+					});
+				}
+				function revokeadmin(usr) {
+					$$.ajax({
+					type: "POST",
+					data: "action=RUA&usr="+usr,
+					success: function(reply) {
+					if(reply == "Success") {location.assign("/users");}
+					}
+					});
+				}
+				function delusr(usr) {
+					$$.ajax({
+					type: "POST",
+					data: "action=DU&usr="+usr,
+					success: function(reply) {
+					if(reply == "Success") {location.assign("/users");}
+					}
+					});
+				}
+				function NewUserButton() {
+					newusr.fadeIn("slow");
+					$$("#CU-admin").val("F");
+				}
+				function newusercancel() {
+					newusr.fadeOut("slow");
+				}
+				function newuser() {
+					var usr = $$("#CU-usr").val();
+					var passw = $$("#CU-passw").val();
+					var rpassw = $$("#CU-rpassw").val();
+					var admin = $$("#CU-admin").val();
+					if (usr != "" && passw != "" && rpassw != "" && admin != "") {
+						if(passw == rpassw && (admin == "T" || admin == "F")) {
+							$$.ajax({
+							type: "POST",
+							data: "action=CU&usr="+usr+"&passw="+passw+"&admin="+admin,
+							success: function(reply) {
+							if(reply == "Success") {location.assign("/users");}
+							}
+							});
+					}
+					}
+				}
+				function cpassshow(usr) {
+					cpass.fadeIn("slow");
+					$$("#CP-usr").html(usr);
+				}
+				function cpasscancel() {
+					cpass.fadeOut("slow");
+				}
+				function cpasschange() {
+					var usr = $$("#CP-usr").html();
+					var passw = $$("#CP-passw").val();
+					var rpassw = $$("#CP-rpassw").val();
+					if (usr != "" && passw != "" && rpassw != "") {
+						if(passw == rpassw) {
+							$$.ajax({
+							type: "POST",
+							data: "action=CP&usr="+usr+"&passw="+passw,
+							success: function(reply) {
+							if(reply == "Success") {location.assign("/users");}
+							}
+							});
+					}
+					}
+				}
+
+			</script>
+			<p>All the users on this instance of Quick Vote:</p>
+				$for r in usrs:
+				<h4 class="panel-title domain">$:r["Username"]</h4>
+				<p class="domain"><a href="#" onclick="delusr('$:r["Username"]')" style="color:#ff0000;">Delete User</a> |
+					<a href="#" onclick="cpassshow('$:r["Username"]')" style="color:#a0a000">Change Password</a> |
+					$if r["isAdmin"] == True:
+						<a href="#" onclick="revokeadmin('$:r["Username"]')" style="color:#ff00ff">Revoke Admin Permissions</a>
+					$else:
+						<a href="#" onclick="makeadmin('$:r["Username"]')" style="color:#ff00ff">Give Admin Permissions</a>
+				</p>
+
+			<button onclick="NewUserButton()" id="NewUserButton" class="btn btn-primary btn-lg btn-block">Create New User</button>
+		</div>
+	</div>
+	</div>
+</div>
+
+<!-- Popup box for Create a new user -->
+<div id="newusr" class="row" style="position:fixed;top:25%;left:25%;z-index:1;height:50%;width:50%;">
+	<div class="panel panel-primary" style="height:100%;overflow-y:hidden;">
+		<div class="panel-heading">
+			<h3 class="panel-title">Create New User</h3>
+		</div>
+		<div class="panel-body" style="height:90%;">
+			<div class="col-md-12" style="height:100%;overflow-y:auto;">
+
+				<label>New Username</label>
+				<input class="form-control" id="CU-usr" placeholder="Enter Username"/>
+
+				<label>Password</label>
+				<input type="password" class="form-control" id="CU-passw" placeholder="Enter New Password"/>
+
+				<label>Repeat Password</label>
+				<input type="password" class="form-control" id="CU-rpassw" placeholder="Re-Enter New Password"/>
+
+				<label>Admin?</label>
+				<select class="btn btn-default" style="width:100%;" id="CU-admin">
+					<option value="T">True</option>
+					<option value="F">False</option>
+				</select>
+
+				<div class="row">
+					<button style="float:right;margin:20px;margin-left:0px;" class="btn btn-primary" onclick="newuser();">Submit</button>
+					<button style="float:right;margin:20px;margin-right:5px;" class="btn btn-danger" onclick="newusercancel();">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Popup box for Change password -->
+<div id="cpass" class="row" style="position:fixed;top:25%;left:25%;z-index:1;height:50%;width:50%;">
+	<div class="panel panel-primary" style="height:100%;overflow-y:hidden;">
+		<div class="panel-heading">
+			<h3 class="panel-title">Change Password for <span id="CP-usr">xxxx</span></h3>
+		</div>
+		<div class="panel-body" style="height:90%;">
+			<div class="col-md-12" style="height:100%;overflow-y:auto;">
+
+				<label>New Password</label>
+				<input type="password" class="form-control" id="CP-passw" placeholder="Enter New Password"/>
+
+				<label>Repeat New Password</label>
+				<input type="password" class="form-control" id="CP-rpassw" placeholder="Re-Enter New Password"/>
+
+				<div class="row">
+					<button style="float:right;margin:20px;margin-left:0px;" class="btn btn-primary" onclick="cpasschange();">Submit</button>
+					<button style="float:right;margin:20px;margin-right:5px;" class="btn btn-danger" onclick="cpasscancel();">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

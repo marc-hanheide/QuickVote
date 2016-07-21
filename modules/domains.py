@@ -147,7 +147,7 @@ class domain_manager:
 				q = "N/A"
 			else:
 				q = qv_questions.find_one({'uuid' : r['active_question']})['question']
-			list.append([r['name'],"{} days {} hrs {} mins".format(td,th,tm),q])
+			list.append([r['name']," {} hrs {} mins".format(th,tm),q,""])
 		return list
 
 	# update last active time of domain

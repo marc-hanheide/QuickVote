@@ -1,7 +1,20 @@
-$def with (DL,IL,A)
+$def with (DL,ML,IL,A)
 $var title: Quick Vote Home
 $var loggedIn: $:IL
-
+	$if A:
+		<div class="row">
+			<div class="panel panel-default">
+			<div class="panel-heading">
+			<h3 class="panel-title">Admin Tools</h3>
+			</div>
+			<div class="panel-body">
+				<div class="col-md-12">
+					<p>Listed Bellow are the tools available to Admins for the management of the entire application overall:</p>
+							<a href="/users" id="NewDomainButton" class="btn btn-primary btn-lg btn-block">Manage Users</a>
+				</div>
+			</div>
+			</div>
+		</div>
 	$if IL == True:
 		<div class="row">
 			<div class="panel panel-default">
@@ -11,9 +24,18 @@ $var loggedIn: $:IL
 			<div class="panel-body">
 				<div class="col-md-12">
 					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
-					$for element in DL:
+					$for element in ML:
 						<a class="panel-title domain" href="/$:element[0]/manage">$:element[0]</a>
-						<p class="domain"><a href="#" onclick="removedomain('$:element[0]');" style="color:#ff0000;">delete domain</a> | Last Active: $:element[1] | Last Edited By: xxxx | Last Edited xx:xx xx/xx/xx | My Permissions: xxxx</p>
+						$if A:
+							<p class="domain"><a href="#" onclick="removedomain('$:element[0]');" style="color:#ff0000;">delete domain</a> |
+						$else:
+							<p class="domain">
+						Last Active: $:element[1] | My Permissions:
+						$if A:
+							Admin
+						$else:
+							$:element[3]
+						</p>
 					$if A:
 						<div class="form-group">
 							<button id="NewDomainButton" class="btn btn-primary btn-lg btn-block">New Domain</button>

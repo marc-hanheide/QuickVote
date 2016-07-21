@@ -11,8 +11,6 @@ if len(abspath) > 0:
 from modules.common import *
 import modules.glob as glob
 
-
-import web
 from web import form
 
 import signal
@@ -23,13 +21,6 @@ from bson import json_util
 import httpagentparser
 from os import _exit
 import time
-
-
-# hashing
-import hmac
-import hashlib
-import random
-import string
 
 from urlparse import urlparse
 
@@ -67,6 +58,11 @@ urls = {
 	 'class'	: 'mainlogin',
 	 'method'	: 'get'
 	 },
+	 'users':
+ 	{'pattern'	: '/users',
+ 	 'class'	: 'Users',
+ 	 'method'	: 'get'
+ 	 },
     'user':                             # arg1 is the domain (questionnaire)
     {'pattern': '/(.+)/$',
      'class': 'ask_question',
@@ -133,9 +129,6 @@ urls = {
 
 
 
-
-
-renderer = web.template.render('templates', base="base", globals=globals())
 
 
 class QuickVoteApp(web.application):
@@ -211,7 +204,7 @@ class ask_question:
 
 
 ### ---- NEW LOGIN SYSTEM ---- ###
-logman = loginmanager()
+
 
 
 class mainlogin:
@@ -253,9 +246,13 @@ class home:
 		domain_list = qv_domains.get_list_of_domains()
 		if logman.LoggedIn():
 			if logman.isAdmin():
-				return renderer.home(domain_list,True,True)	# (domain info, loggedin, isAdmin)
-			return renderer.home(domain_list,True,False) # (domain info, loggedin, isAdmin)
-		return renderer.home(domain_list,False,False)
+				return renderer.home(domain_list,domain_list,True,True)	# (domain info, loggedin, isAdmin)
+			manage_domain_list = []
+			for d in domain_list:
+				if qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr')) == "Coord" or qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr')) == "Editor":
+					manage_domain_list.append([d[0],d[1],d[2],qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr'))])
+			return renderer.home(domain_list,manage_domain_list,True,False) # (domain info, loggedin, isAdmin)
+		return renderer.home(domain_list,None,False,False)
 
 ### END
 
@@ -313,15 +310,17 @@ class manage:
 						qv_domains.get_list_of_users(domain),							# list of users for domain (string[[]] / None)
 						None															# list of coordinators for domain (string[] / None)
 					)
-				return renderer.manage(
-					domain, 														# name of domain to manage (string)
-					True,															# is user logged in? (boolean)
-					logman.isAdmin(),												# is user and Admin? (boolean)
-					None,															# Access that user has to domain (string)
-					[""],															# list of editors for domain (string[] / None)
-					None															# list of coordinators for domain (string[] / None)
-				)
-			return web.notfound()
+				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Editor":
+					return renderer.manage(
+						domain, 														# name of domain to manage (string)
+						True,															# is user logged in? (boolean)
+						logman.isAdmin(),												# is user and Admin? (boolean)
+						"Editor",														# Access that user has to domain (string)
+						[""],															# list of editors for domain (string[] / None)
+						None															# list of coordinators for domain (string[] / None)
+					)
+			else:
+				return web.notfound()
 		return web.seeother('/login')
 class MainageDomainUsers:
 	def POST(self,domain):

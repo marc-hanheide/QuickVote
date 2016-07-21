@@ -1,5 +1,13 @@
 from pymongo import DESCENDING	# for indexing in decending order
+from pymongo import ASCENDING
 from datetime import datetime	# for getting the current time
+import web
+renderer = web.template.render('templates', base="base", globals=globals())
+# hashing
+import hmac
+import hashlib
+import random
+import string
 
 # UUID4
 from uuid import uuid4

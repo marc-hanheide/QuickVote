@@ -1,9 +1,11 @@
 from common import *
+import domains
+qv_domains = domains.domain_manager(qv_db)
 ### ---- NEW LOGIN SYSTEM MONGODB ---- ###
 
 # new login collection
 qv_logins = qv_db['logins']
-qv_logins.create_index([('Username',DESCENDING)],unique=True)
+qv_logins.create_index([('Username',ASCENDING)],unique=True)
 
 # create default login if no login exists
 if qv_logins.find().count() == 0:
@@ -30,6 +32,7 @@ class loginmanager:
 
 	# create session in qv_sessions and create cookies
 	def Login(self,user):
+		global qv_sessions
 		sesunhash_tmp = user + str(datetime.utcnow()) + self.RandomString(10)
 		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
 		try:
@@ -111,3 +114,94 @@ class loginmanager:
 		if self.LoggedIn():
 			return qv_logins.find_one({'Username' : web.cookies().get('QV_Usr')})['isAdmin']
 		return False
+logman = loginmanager()
+
+class UserManager:
+	def get_usr_list(self):
+		if logman.isAdmin():
+			recs = qv_logins.find({"Username" : {"$exists" : True}})
+			if recs != None:
+				return recs
+		return None
+
+	def make_user_admin(self,usr):
+		if logman.isAdmin():
+			r = qv_logins.find_one({"Username" : usr})
+			if r != None:
+				r["isAdmin"] = True
+				qv_logins.save(r)
+				return True
+		return False
+	def change_user_password(self,usr,passw):
+		if logman.isAdmin():
+			r = qv_logins.find_one({"Username" : usr})
+			if r != None:
+				r["Password"] = hmac.new('QVkey123',passw,hashlib.sha512).hexdigest()
+				qv_logins.save(r)
+				return True
+		return False
+	def revoke_user_admin(self,usr):
+		if logman.isAdmin():
+			r = qv_logins.find_one({"Username" : usr})
+			if r != None:
+				r["isAdmin"] = False
+				qv_logins.save(r)
+				return True
+		return False
+	def delete_user(self,usr):
+		if logman.isAdmin():
+			try:
+				qv_logins.delete_one({"Username" : usr})
+				return True
+			except:
+				return False
+		return False
+	def create_user(self,usr,passw,admin):
+		if logman.isAdmin():
+			try:
+				qv_logins.insert({
+					'Username' : usr,
+					'Password' : hmac.new('QVkey123',passw,hashlib.sha512).hexdigest(),
+					'isAdmin'  : admin
+				})
+				return True
+			except:
+				return False
+
+
+usrman = UserManager()
+
+# LOGIN and USER pages
+
+class Users:
+	def GET(self):
+		if logman.isAdmin():
+			return renderer.users(True,usrman.get_usr_list())
+		return web.notacceptable()
+
+	def POST(self):
+		w = web.input()
+		if w["action"] == "MUA":
+			if w["usr"] != None:
+				if usrman.make_user_admin(w["usr"]):
+					return "Success"
+		if w["action"] == "RUA":
+			if w["usr"] != None:
+				if usrman.revoke_user_admin(w["usr"]):
+					return "Success"
+		if w["action"] == "CU":
+			if w["usr"] != None and w["passw"] != None and w["admin"]:
+				a = False
+				if w["admin"] == "T":
+					a = True
+				if usrman.create_user(w["usr"],w["passw"],a):
+					return "Success"
+		if w["action"] == "CP":
+			if w["usr"] != None and w["passw"] != None:
+				if usrman.change_user_password(w["usr"],w["passw"]):
+					return "Success"
+		if w["action"] == "DU":
+			if w["usr"] != None:
+				if usrman.delete_user(w["usr"]):
+					return "Success"
+		return "Fail"
