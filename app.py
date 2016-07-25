@@ -36,7 +36,6 @@ path_prefix = urlparse(config.base_url).path
 
 for v in urls.values():
     app.add_mapping(v['pattern'], v['class'])
-    #v['url_pattern'] = '../'+v['pattern'][1:].replace('(.+)', '%s')
     v['url_pattern'] = path_prefix + v['pattern'][1:].replace('(.+)', '%s')
     print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
 

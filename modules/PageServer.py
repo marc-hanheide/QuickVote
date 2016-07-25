@@ -503,7 +503,7 @@ class questions:
         else:
             web.internalerror("could not all data provided as required: "
                               "user_data=%s" % user_data)
-        return web.ok()  # web.seeother('/%s/%s/editor' % (domain, admin_url))
+        return web.ok()
 
     def GET(self, domain, uuid):
         q = qv_questions.find_one({'uuid': uuid})
@@ -565,7 +565,7 @@ class results:
                         if 'HTTP_USER_AGENT' in answer['env']:
                             ua = httpagentparser.detect(answer['env']['HTTP_USER_AGENT'])
                             try:
-                                k = ua['platform']['name']  #+ " / " + ua['browser']['name']
+                                k = ua['platform']['name']
                             except:
                                 k = "*unknown* / " + ua['browser']['name']
                             if k not in user_agents:
@@ -693,7 +693,7 @@ class results:
             finally:
                 new_input.release()
             block = True
-            #time.sleep(1);
+
             data = self.compute_results(domain, uuid)
             data['dummy'] = config.dummy_data
 
