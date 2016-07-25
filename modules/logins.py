@@ -1,7 +1,5 @@
 from common import *
-import domains
-qv_domains = domains.domain_manager(qv_db)
-### ---- NEW LOGIN SYSTEM MONGODB ---- ###
+from domains import qv_domains
 
 # new login collection
 qv_logins = qv_db['logins']
@@ -168,40 +166,4 @@ class UserManager:
 			except:
 				return False
 
-
 usrman = UserManager()
-
-# LOGIN and USER pages
-
-class Users:
-	def GET(self):
-		if logman.isAdmin():
-			return renderer.users(True,usrman.get_usr_list())
-		return web.notacceptable()
-
-	def POST(self):
-		w = web.input()
-		if w["action"] == "MUA":
-			if w["usr"] != None:
-				if usrman.make_user_admin(w["usr"]):
-					return "Success"
-		if w["action"] == "RUA":
-			if w["usr"] != None:
-				if usrman.revoke_user_admin(w["usr"]):
-					return "Success"
-		if w["action"] == "CU":
-			if w["usr"] != None and w["passw"] != None and w["admin"]:
-				a = False
-				if w["admin"] == "T":
-					a = True
-				if usrman.create_user(w["usr"],w["passw"],a):
-					return "Success"
-		if w["action"] == "CP":
-			if w["usr"] != None and w["passw"] != None:
-				if usrman.change_user_password(w["usr"],w["passw"]):
-					return "Success"
-		if w["action"] == "DU":
-			if w["usr"] != None:
-				if usrman.delete_user(w["usr"]):
-					return "Success"
-		return "Fail"

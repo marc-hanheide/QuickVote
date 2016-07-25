@@ -1,7 +1,7 @@
 # common imports
 from modules.common import *
 import modules.glob as glob
-print "domains.py = " + str(datetime.now())
+
 import math
 
 class domain_manager:
@@ -202,3 +202,5 @@ class domain_manager:
 			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
 			return True
 		return False
+
+qv_domains = domain_manager(qv_db)

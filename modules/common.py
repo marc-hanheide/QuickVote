@@ -1,5 +1,8 @@
 from pymongo import DESCENDING	# for indexing in decending order
 from pymongo import ASCENDING
+from json import dumps
+from bson import json_util
+import httpagentparser
 from datetime import datetime	# for getting the current time
 import web
 renderer = web.template.render('templates', base="base", globals=globals())
