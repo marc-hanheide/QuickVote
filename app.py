@@ -292,6 +292,10 @@ class manage:
 	def GET(self,domain):
 		if logman.LoggedIn() == True:
 			if qv_domains.is_domain(domain):
+				recs = usrman.get_usr_list()
+				usrs = []
+				for r in recs:
+					usrs.append(r["Username"])
 				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Coord":
 					return renderer.manage(
 						domain, 														# name of domain to manage (string)
@@ -299,7 +303,8 @@ class manage:
 						logman.isAdmin(),												# is user and Admin? (boolean)
 						"Coord",														# Access that user has to domain (string)
 						qv_domains.get_list_of_editors(domain),							# list of editors for domain (string[] / None)
-						None															# list of coordinators for domain (string[] / None)
+						None,															# list of coordinators for domain (string[] / None)
+						usrs
 					)
 				if logman.isAdmin():
 					return renderer.manage(
@@ -308,7 +313,8 @@ class manage:
 						logman.isAdmin(),												# is user and Admin? (boolean)
 						None,															# Access that user has to domain (string)
 						qv_domains.get_list_of_users(domain),							# list of users for domain (string[[]] / None)
-						None															# list of coordinators for domain (string[] / None)
+						None,															# list of coordinators for domain (string[] / None)
+						usrs
 					)
 				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Editor":
 					return renderer.manage(
@@ -317,7 +323,8 @@ class manage:
 						logman.isAdmin(),												# is user and Admin? (boolean)
 						"Editor",														# Access that user has to domain (string)
 						[""],															# list of editors for domain (string[] / None)
-						None															# list of coordinators for domain (string[] / None)
+						None,															# list of coordinators for domain (string[] / None)
+						usrs
 					)
 			else:
 				return web.notfound()

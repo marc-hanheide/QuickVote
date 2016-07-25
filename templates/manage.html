@@ -1,4 +1,4 @@
-$def with (domain, LI, A, Access, Editors, Coordinators)
+$def with (domain, LI, A, Access, Editors, Coordinators, usrs)
 $var title: $:domain
 $var loggedIn: $:LI
 
@@ -75,14 +75,23 @@ $if A or Access == "Coord":
 							<div class="form-group">
 
 									<form id="editor-usr">
+										<datalist id="user-list">
+										$for u in usrs:
+											<option value="$:u">
+										</datalist>
 
 									</form>
 									<script>
+										var AvaUserList = [
+												""
+											$for u in usrs:
+												,"$:u"
+										];
 										var unique_id_number = -1;
 
 										function CreateId(start) {
 											unique_id_number++;
-											return start + unique_id_number
+											return start + unique_id_number;
 										}
 
 										// list of editors from db
@@ -98,7 +107,14 @@ $if A or Access == "Coord":
 											$else:
 												""
 										];
-
+										function AvaTest(id,val) {
+											// test if user exists
+											if(AvaUserList.indexOf(val) == -1) {
+												$$("#"+id).css("background","#FFAAAA");
+												return false;
+											}
+											return true;
+										}
 										/* Send usr list to server */
 										$if Access == "Coord":
 											function CoordSendUsrs() {
@@ -106,11 +122,16 @@ $if A or Access == "Coord":
 												data = "";
 												// all inputs except the empty end input
 												for (var i = 0; i < eles.length-1; i++) {
+													if(!AvaTest(eles[i].id,eles[i].value) && ATret) {
+														ATret = false;
+													}
+
 													if (i != 0) {
 														data += "&";
 													}
 													data += i+"="+ eles[i].value;
 												}
+												if(!ATret) {return;}
 												$$.ajax({
 												type: "POST",
 												data: data,
@@ -130,15 +151,21 @@ $if A or Access == "Coord":
 										$if A:
 		 									 function AdminSendUsrs() {
 		 										 var eles = $$("#editor-usr").children(".names");
+												 ATret = true;
 		 										 data = "";
 		 										 // all inputs except the empty end input
 		 										 for (var i = 0; i < eles.length-1; i++) {
+													 if(!AvaTest(eles[i].id,eles[i].value) && ATret) {
+														 ATret = false;
+													 }
+
 		 											 if (i != 0) {
 		 												 data += "&";
 		 											 }
 		 											 data += i+"="+ eles[i].value;
 													 data += "&drop"+i+"="+$$("#drop"+eles[i].id).val();
 		 										 }
+												 if(!ATret) {return;}
 		 										 $$.ajax({
 		 										 type: "POST",
 		 										 data: data,
@@ -166,7 +193,7 @@ $if A or Access == "Coord":
 													$$("#"+eles[i].id).fadeOut("slow" ,$$("#"+eles[i].id).remove());
 
 													$if A:
-														$$("#drop"+eles[i].id).fadeOut("slow" ,$$("#"+eles[i].id).remove());
+														$$("#drop"+eles[i].id).fadeOut("slow" ,$$("#drop"+eles[i].id).remove());
 												}
 
 												// add new input if last element is not empty
@@ -179,14 +206,15 @@ $if A or Access == "Coord":
 										$if Access == "Coord":
 											function InsertListInput(value) {
 												var id = CreateId("usr");
-												$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
+												$$('#editor-usr').append($$("<input list=\"user-list\" id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
 											}
 										$if A:
 											function InsertListInput(value,role) {
 												var id = CreateId("usr");
-												$$('#editor-usr').append($$("<input id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;float:left;width:70%;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
+												$$('#editor-usr').append($$("<input list=\"user-list\" id=\""+id+"\" onkeyup=\"EditList();\" style=\"margin-top:5px;float:left;width:70%;\" class=\"names form-control\" placeholder=\"Enter Userame\" value=\""+value+"\"/>").hide().fadeIn("slow"));
 												$$('#editor-usr').append($$("<select id=\"drop"+id+"\" style=\"margin-top:5px;margin-left:1%;float:left;width:29%;\" class=\"btn btn-default\"><option value=\"Editor\">Editor</option><option value=\"Coord\">Coordinator</option></select>").hide().fadeIn("slow"));
 												$$("#drop"+id).val(role);
+
 											}
 										// output list when ready
 										$$("document").ready(function() {
