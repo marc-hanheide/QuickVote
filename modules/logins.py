@@ -33,6 +33,8 @@ class loginmanager:
 		global qv_sessions
 		sesunhash_tmp = user + str(datetime.utcnow()) + self.RandomString(10)
 		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
+		if qv_sessions.find_one({"Username" : user}) != None:
+			qv_sessions.delete_one({"Username" : user})
 		try:
 			# create session in qv_sessions
 			qv_sessions.insert({'createdAt' : datetime.utcnow(), 'Username' : user, 'QV_Ses' : seshash_tmp})
