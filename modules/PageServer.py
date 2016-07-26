@@ -2,6 +2,7 @@ from common import *
 from domains import qv_domains
 from logins import logman
 from logins import usrman
+from logins import qv_logins
 import glob
 
 urls = {
