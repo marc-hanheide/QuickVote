@@ -1,6 +1,7 @@
-$def with (domain, LI, A, Access, Editors, Coordinators, usrs)
+$def with (base,domain, LI, A, Access, Editors, Coordinators, usrs)
 $var title: $:domain
 $var loggedIn: $:LI
+$var base: $:base
 
 $if A:
 	<div class="row">
@@ -24,7 +25,7 @@ $if A:
 							type: "POST",
 							url:	"/Update/EditDom/"+d,
 							success: function(reply) {
-								if(reply == "success") {location.assign("/"+d+"/manage");}
+								if(reply == "success") {location.assign("$(base)"+d+"/manage");}
 							}
 							});
 						}
@@ -46,9 +47,9 @@ $if LI:
         <div class="panel-body">
 					<div class="col-md-12">
 						<div class="form-group">
-							<a class="domain" href="/$:domain/editor">Edit Domain Questions</a>
-							<a class="domain" href="/$:domain/view">View Active Question</a>
-							<a class="domain" href="/$:domain/history">Review Past Votes</a>
+							<a class="domain" href="$(base)$:domain/editor">Edit Domain Questions</a>
+							<a class="domain" href="$(base)$:domain/view">View Active Question</a>
+							<a class="domain" href="$(base)$:domain/history">Review Past Votes</a>
 						</div>
 				</div>
 			</div>
@@ -266,7 +267,7 @@ $if A or Access == "Coord":
 			data: data,
 			success: function(reply) {
 				if (reply == "Success") {
-					location.assign('/');
+					location.assign('$(base)');
 					return
 				}
 				$$("#reply").text(reply);

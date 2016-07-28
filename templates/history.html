@@ -1,5 +1,5 @@
-$def with (data,LI)
-
+$def with (base,data,LI)
+$var bast: $:base
 $var title: QuickVote History
 $var loggedIn: $:LI
 
@@ -11,7 +11,7 @@ $var loggedIn: $:LI
 	function display_chart(data) {
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
-			
+
 		chart_obj = new Chart(ctx).Line(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].strokeColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
 		    animation: false
 		});
@@ -40,7 +40,7 @@ $var loggedIn: $:LI
 
 		}
 	);
-	
+
 </script>
 
 <div class="row clearfix">

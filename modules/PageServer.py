@@ -5,103 +5,6 @@ from logins import usrman
 from logins import qv_logins
 import glob
 
-urls = {
-	# display filterable list of domains
-	'home':
-	{'pattern'	: '/',
-	 'class'	: 'home',
-	 'method'	: 'get'
-	 },
-	# manage domain
-	'manage':
-	{'pattern' 	: '/(.+)/manage',
-	 'class'	: 'manage',
-	 'method'	: 'get'
-	},
-	# edit / remove / add new domains
-	'EditDom':
-	{'pattern' 	: '/(.+)/EditDom/(.+)',
-	 'class'	: 'EditDom',
-	 'method'	: 'post'
-	},
-	'MainageDomainUsers':
-	{'pattern' 	: '/(.+)/manage/update',
-	 'class'	: 'MainageDomainUsers',
-	 'method'	: 'post'
-	},
-	# login page
-	 'mainlogin':
-	{'pattern'	: '/login',
-	 'class'	: 'mainlogin',
-	 'method'	: 'get'
-	 },
-	 'users':
- 	{'pattern'	: '/users',
- 	 'class'	: 'Users',
- 	 'method'	: 'get'
- 	 },
-    'user':                             # arg1 is the domain (questionnaire)
-    {'pattern': '/(.+)/$',
-     'class': 'ask_question',
-     'method': 'get'
-     },
-    'view':                             # arg1 is the domain
-    {'pattern': '/(.+)/view',
-     'class': 'view',
-     'method': 'get'
-     },
-    'small':                             # arg1 is the domain
-    {'pattern': '/(.+)/small',
-     'class': 'small',
-     'method': 'get'
-     },
-    'history':                             # arg1 is the domain
-    {'pattern': '/(.+)/history',
-     'class': 'history',
-     'method': 'get'
-     },
-    'editor':                           # arg1 is the domain
-    {'pattern': '/(.+)/editor',
-     'class': 'editor',
-     'method': 'get'
-     },
-    'login':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/(.+)/(.+)/login',
-     'class': 'login',
-     'method': 'get'
-     },
-    'logoff':                           # arg1 is the domain, arg2 the admin_url
-    {'pattern': '/(.+)/(.+)/logout',
-     'class': 'logoff',
-     'method': 'get'
-     },
-    # API:
-    'user_post':                        # arg1 is the domain (POST only)
-    {'pattern': '/api/(.+)/a',
-     'class': 'ask_question',
-     'method': 'post'
-     },
-    'answers_post':                     # arg1 is the domain (POST only)
-    {'pattern': '/api/(.+)/a/(.+)',    # arg2 is the question UUID
-     'class': 'answers',
-     'method': 'post'
-     },
-    'question_post':                    # for POSTs to edit questions
-    {'pattern': '/api/(.+)/q',     # (uuid in payload)
-     'class': 'questions',              # arg1: domain
-     'method': 'post'
-     },
-    'question_get':                     # for GETs to retrieve question data
-    {'pattern': '/api/(.+)/q/(.+)',  # arg1 is domain, arg 2 uuid of question
-     'class': 'questions',
-     'method': 'get'
-     },
-    'results_get':                      # arg1 is domain, arg 2 uuid of question
-    {'pattern': '/api/(.+)/r/(.+)',
-     'class': 'results',
-     'method': 'get'
-     }
-}
 
 ### Renderers for actual interface:
 class ask_question:
@@ -113,10 +16,10 @@ class ask_question:
             qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
         data = {'qs': qs,
                 'session_uuid': glob.session_uuid,
-                'submit_url': urls['user_post']['url_pattern'] % domain,
+                'submit_url': glob.urls['user_post']['url_pattern'] % domain,
                 }
         qv_domains.DomainActive(domain)
-        return renderer.index(data,logman.LoggedIn())
+        return renderer.index(config.base_url,data,logman.LoggedIn())
 
     def POST(self, domain):
         # verify the cookie is not set to the current session.
@@ -124,7 +27,7 @@ class ask_question:
         c = web.cookies(session_uuid=uuid4()).session_uuid
         if str(c) == str(glob.session_uuid):
             print "user submitted again to same session"
-            return renderer.duplicate(urls['user']['url_pattern']
+            return renderer.duplicate(config.base_url,glob.urls['user']['url_pattern']
                                       .replace('$', '') % domain,logman.LoggedIn())
         else:
             web.setcookie('session_uuid', glob.session_uuid, 3600)
@@ -144,14 +47,14 @@ class ask_question:
             new_input.notifyAll()
         finally:
             new_input.release()
-        return renderer.submit(urls['user']['url_pattern']
+        return renderer.submit(config.base_url,glob.urls['user']['url_pattern']
                                .replace('$', '') % domain,logman.LoggedIn())
 
 class mainlogin:
 	def GET(self):
 		if logman.LoggedIn():
 			logman.Logout()
-		return renderer.mainlogin(logman.LoggedIn())
+		return renderer.mainlogin(config.base_url,logman.LoggedIn())
 
 	def POST(self):
 		var = web.input()
@@ -180,7 +83,7 @@ class mainlogin:
 class Users:
 	def GET(self):
 		if logman.isAdmin():
-			return renderer.users(True,usrman.get_usr_list())
+			return renderer.users(config.base_url,True,usrman.get_usr_list())
 		return web.notacceptable()
 
 	def POST(self):
@@ -216,13 +119,13 @@ class home:
 		domain_list = qv_domains.get_list_of_domains()
 		if logman.LoggedIn():
 			if logman.isAdmin():
-				return renderer.home(domain_list,domain_list,True,True)	# (domain info, loggedin, isAdmin)
+				return renderer.home(config.base_url,domain_list,domain_list,True,True)	# (domain info, loggedin, isAdmin)
 			manage_domain_list = []
 			for d in domain_list:
 				if qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr')) == "Coord" or qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr')) == "Editor":
 					manage_domain_list.append([d[0],d[1],d[2],qv_domains.Access_domain(d[0],web.cookies().get('QV_Usr'))])
-			return renderer.home(domain_list,manage_domain_list,True,False) # (domain info, loggedin, isAdmin)
-		return renderer.home(domain_list,None,False,False)
+			return renderer.home(config.base_url,domain_list,manage_domain_list,True,False) # (domain info, loggedin, isAdmin)
+		return renderer.home(config.base_url,domain_list,None,False,False)
 
 class EditDom:
 	# function to add / remove / edit a domain
@@ -264,7 +167,7 @@ class manage:
 				for r in recs:
 					usrs.append(r["Username"])
 				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Coord":
-					return renderer.manage(
+					return renderer.manage(config.base_url,
 						domain, 														# name of domain to manage (string)
 						True,															# is user logged in? (boolean)
 						logman.isAdmin(),												# is user and Admin? (boolean)
@@ -274,7 +177,7 @@ class manage:
 						usrs
 					)
 				if logman.isAdmin():
-					return renderer.manage(
+					return renderer.manage(config.base_url,
 						domain, 														# name of domain to manage (string)
 						True,															# is user logged in? (boolean)
 						logman.isAdmin(),												# is user and Admin? (boolean)
@@ -284,7 +187,7 @@ class manage:
 						usrs
 					)
 				if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Editor":
-					return renderer.manage(
+					return renderer.manage(config.base_url,
 						domain, 														# name of domain to manage (string)
 						True,															# is user logged in? (boolean)
 						logman.isAdmin(),												# is user and Admin? (boolean)
@@ -341,21 +244,21 @@ class editor:
             'new_uuid': uuid4(),
             'domain': domain,
             'active_question': qv_domains.get_active_question(domain),
-            'submit_url': urls['question_post']['url_pattern']
+            'submit_url': glob.urls['question_post']['url_pattern']
             % (domain),
-            'get_url': urls['question_get']['url_pattern'] % (domain, ''),
-            'get_results_url': urls['results_get']['url_pattern']
+            'get_url': glob.urls['question_get']['url_pattern'] % (domain, ''),
+            'get_results_url': glob.urls['results_get']['url_pattern']
             % (domain, ''),
-            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
-            'results_url': urls['view']['url_pattern'] % (domain),
-            'history_url': urls['history']['url_pattern'] % (domain),
+            'delete_url': glob.urls['answers_post']['url_pattern'] % (domain, ''),
+            'results_url': glob.urls['view']['url_pattern'] % (domain),
+            'history_url': glob.urls['history']['url_pattern'] % (domain),
         }
 
 		qsd = [q for q in qs]
 
 		data['existing_questions'] = qsd
 
-		return renderer.editor(data,logman.LoggedIn())
+		return renderer.editor(config.base_url,data,logman.LoggedIn())
 class admin:
 
     def GET(self, domain):
@@ -368,21 +271,21 @@ class admin:
             'new_uuid': uuid4(),
             'domain': domain,
             'active_question': qv_domains.get_active_question(domain),
-            'submit_url': urls['question_post']['url_pattern']
+            'submit_url': glob.urls['question_post']['url_pattern']
             % (domain),
-            'get_url': urls['question_get']['url_pattern'] % (domain, ''),
-            'get_results_url': urls['results_get']['url_pattern']
+            'get_url': glob.urls['question_get']['url_pattern'] % (domain, ''),
+            'get_results_url': glob.urls['results_get']['url_pattern']
             % (domain, ''),
-            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
-            'results_url': urls['view']['url_pattern'] % (domain),
-            'history_url': urls['history']['url_pattern'] % (domain),
+            'delete_url': glob.urls['answers_post']['url_pattern'] % (domain, ''),
+            'results_url': glob.urls['view']['url_pattern'] % (domain),
+            'history_url': glob.urls['history']['url_pattern'] % (domain),
         }
 
         qsd = [q for q in qs]
 
         data['existing_questions'] = qsd
 
-        return renderer.admin(data,logman.LoggedIn())
+        return renderer.admin(config.base_url,data,logman.LoggedIn())
 class view:
 
     def GET(self, domain):
@@ -396,15 +299,15 @@ class view:
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (domain, uuid),
+            'get_url': glob.urls['results_get']['url_pattern'] % (domain, uuid),
             'existing_questions': [],
             'active_question': qv_domains.get_active_question(domain),
-            'activate_question_url': urls['question_get']['url_pattern']
+            'activate_question_url': glob.urls['question_get']['url_pattern']
             % (domain, ''),
-            'delete_url': urls['answers_post']['url_pattern'] % (domain, ''),
-            'get_results_url': urls['results_get']['url_pattern']
+            'delete_url': glob.urls['answers_post']['url_pattern'] % (domain, ''),
+            'get_results_url': glob.urls['results_get']['url_pattern']
             % (domain, ''),
-            'history_url': urls['history']['url_pattern'] % (domain),
+            'history_url': glob.urls['history']['url_pattern'] % (domain),
         }
 
 		qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
@@ -413,7 +316,7 @@ class view:
 
 		data['existing_questions'] = qsd
 
-		return renderer.view(data,logman.LoggedIn())
+		return renderer.view(config.base_url,data,logman.LoggedIn())
 class history:
 
     def GET(self, domain):
@@ -428,10 +331,10 @@ class history:
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+            'get_url': glob.urls['results_get']['url_pattern'] % (domain, uuid)
 		}
 
-		return renderer.history(data,logman.LoggedIn())
+		return renderer.history(config.base_url,data,logman.LoggedIn())
 
 class small:
 
@@ -446,10 +349,10 @@ class small:
             'uuid': uuid,
             'domain': domain,
             'vote_url': config.base_url+domain+'/',
-            'get_url': urls['results_get']['url_pattern'] % (domain, uuid)
+            'get_url': glob.urls['results_get']['url_pattern'] % (domain, uuid)
         }
 
-        return renderer.small(data,logman.LoggedIn())
+        return renderer.small(config.base_url,data,logman.LoggedIn())
 
 ## API access points
 class answers:

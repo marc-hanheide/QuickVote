@@ -1,5 +1,5 @@
-$def with (data,LI)
-
+$def with (base,data,LI)
+$var base: $:base
 $var title: QuickVote Results
 $var loggedIn: $:LI
 
@@ -43,7 +43,7 @@ $var loggedIn: $:LI
 	function display_chart(data) {
 		var ctx = document.getElementById("resultChart").getContext("2d");
 
-			
+
 		chart_obj = new Chart(ctx).Bar(data, {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
 		    animation: false
 		});
@@ -55,13 +55,13 @@ $var loggedIn: $:LI
 	function display_user_chart(data) {
 		var ctx = document.getElementById("userChart").getContext("2d");
 
-			
+
 		chart_obj = new Chart(ctx).Bar(data['userChart'], {legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li style=\"color:<%=datasets[i].fillColor%>\"><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>",
 		    animation: false
 		});
 
 	}
-    
+
 	function update_chart(data) {
 		// Get the context of the canvas element we want to select
 
@@ -105,7 +105,7 @@ $var loggedIn: $:LI
 
       			}
     		});
-            
+
             $$('#comment_toggle').change(function(){
                 if ($$(this).prop("checked")){
                     //They want to show comments
@@ -163,7 +163,7 @@ $var loggedIn: $:LI
 	  	</div>
 		<button onclick="new_session();" class="btn btn-danger btn-block" type="button">
 						Start New Session
-					</button> 
+					</button>
 
 	</div>
 	<div class="col-md-9 column">
@@ -172,10 +172,10 @@ $var loggedIn: $:LI
 		    	<h3 class="panel-title">Question</h3>
 	    	</div>
 		  	<div class="panel-body">
-				<div class="btn-group"> 
+				<div class="btn-group">
 					<button id = "active_question" class="btn btn-default">
 						Question
-					</button> 
+					</button>
 					<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
 						<span class="caret"></span>
 					</button>
@@ -202,7 +202,7 @@ $var loggedIn: $:LI
 				    Responses Plot
 				  </label>
 				</div>
-                
+
                 <div class="checkbox-inline">
                     <label>
                         <input id="comment_toggle" type="checkbox" data-toggle="toggle" checked>

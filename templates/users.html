@@ -1,7 +1,7 @@
-$def with (IL,usrs)
+$def with (base,IL,usrs)
 $var title: Quick Vote Manage Users
 $var loggedIn: $:IL
-
+$var base: $:base
 <div class="row">
 	<div class="panel panel-default">
 	<div class="panel-heading">
@@ -19,7 +19,7 @@ $var loggedIn: $:IL
 					type: "POST",
 					data: "action=MUA&usr="+usr,
 					success: function(reply) {
-						if(reply == "Success") {location.assign("/users");}
+						if(reply == "Success") {location.assign("$(base)users");}
 					}
 					});
 				}
@@ -28,7 +28,7 @@ $var loggedIn: $:IL
 					type: "POST",
 					data: "action=RUA&usr="+usr,
 					success: function(reply) {
-					if(reply == "Success") {location.assign("/users");}
+					if(reply == "Success") {location.assign("$(base)users");}
 					}
 					});
 				}
@@ -37,7 +37,7 @@ $var loggedIn: $:IL
 					type: "POST",
 					data: "action=DU&usr="+usr,
 					success: function(reply) {
-					if(reply == "Success") {location.assign("/users");}
+					if(reply == "Success") {location.assign("$(base)users");}
 					}
 					});
 				}
@@ -59,7 +59,7 @@ $var loggedIn: $:IL
 							type: "POST",
 							data: "action=CU&usr="+usr+"&passw="+passw+"&admin="+admin,
 							success: function(reply) {
-							if(reply == "Success") {location.assign("/users");}
+							if(reply == "Success") {location.assign("$(base)users");}
 							}
 							});
 					}
@@ -82,7 +82,7 @@ $var loggedIn: $:IL
 							type: "POST",
 							data: "action=CP&usr="+usr+"&passw="+passw,
 							success: function(reply) {
-							if(reply == "Success") {location.assign("/users");}
+							if(reply == "Success") {location.assign("$(base)users");}
 							}
 							});
 					}

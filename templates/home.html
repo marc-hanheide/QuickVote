@@ -1,6 +1,7 @@
-$def with (DL,ML,IL,A)
+$def with (base,DL,ML,IL,A)
 $var title: Quick Vote Home
 $var loggedIn: $:IL
+$var base: $:base
 	$if A:
 		<div class="row">
 			<div class="panel panel-default">
@@ -10,7 +11,7 @@ $var loggedIn: $:IL
 			<div class="panel-body">
 				<div class="col-md-12">
 					<p>Listed Bellow are the tools available to Admins for the management of the entire application overall:</p>
-							<a href="/users" class="btn btn-primary btn-lg btn-block">Manage Users</a>
+							<a href="$(base)users" class="btn btn-primary btn-lg btn-block">Manage Users</a>
 				</div>
 			</div>
 			</div>
@@ -25,7 +26,7 @@ $var loggedIn: $:IL
 				<div class="col-md-12">
 					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
 					$for element in ML:
-						<a class="panel-title domain" href="/$:element[0]/manage">$:element[0]</a>
+						<a class="panel-title domain" href="$(base)$:element[0]/manage">$:element[0]</a>
 						$if A:
 							<p class="domain"><a href="#" onclick="removedomain('$:element[0]');" style="color:#ff0000;">delete domain</a> |
 						$else:
@@ -56,7 +57,7 @@ $var loggedIn: $:IL
 								type: "POST",
 								url:	"/Add/EditDom/"+d,
 								success: function(reply) {
-									if(reply == "success") {location.assign("/");}
+									if(reply == "success") {location.assign("$(base)");}
 								}
 								});
 							}
@@ -65,7 +66,7 @@ $var loggedIn: $:IL
 								type: "POST",
 								url:	"/Remove/EditDom/"+val,
 								success: function(reply) {
-									if(reply == "success") {location.assign("/");}
+									if(reply == "success") {location.assign("$(base)");}
 								}
 								});
 							}
@@ -103,7 +104,7 @@ $var loggedIn: $:IL
 				<p>Listed Bellow are all of the domains currently being hosted. Follow the domain name link to submit
 				an answer to the active question on that domain. The domains bellow are listed by the most active first. This can be because it was edited recently or because the current question has recently been answered.</p>
 				$for element in DL:
-					<a class="panel-title domain" href="/$:element[0]/">$:element[0]</a>
+					<a class="panel-title domain" href="$(base)$:element[0]/">$:element[0]</a>
 					<p class="domain">Last Active: $:element[1] | Active Question: $:element[2]</p>
 
 			</div>

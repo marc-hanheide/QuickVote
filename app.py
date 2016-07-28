@@ -30,11 +30,11 @@ class QuickVoteApp(web.application):
 if __name__ == '__main__':
     app = QuickVoteApp((), globals())
 else:
-    app = web.application(urls, globals(), autoreload=False)
+    app = web.application(glob.urls, globals(), autoreload=False)
 
 path_prefix = urlparse(config.base_url).path
-
-for v in urls.values():
+print "path_prefix = " + path_prefix
+for v in glob.urls.values():
     app.add_mapping(v['pattern'], v['class'])
     v['url_pattern'] = path_prefix + v['pattern'][1:].replace('(.+)', '%s')
     print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])

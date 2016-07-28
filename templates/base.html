@@ -35,13 +35,13 @@ $def with (page, vars=None)
 		  	<div class="container-fluid" >
 	    		<div class="navbar-header" style="width:100%;">
 	      			<div class="navbar-brand" style="width:100%;" onclick="/*location.reload();*/">
-	        			<img alt="QV" src="/static/qv_logo.png" height="32px" style="cursor:pointer;" onclick="location.assign('/');">QuickVote
+	        			<img alt="QV" src="/static/qv_logo.png" height="32px" style="cursor:pointer;" onclick="location.assign('$(page.base)');">QuickVote
 	        			<button class="btn btn-warning"
 		    		        onclick="location.reload();">Reload
 	    				</button>
 						$if page.loggedIn == "True":
 							<button class="btn btn-warning"
-								onclick="location.assign('/login');"
+								onclick="location.assign('$(page.base)login');"
 								style="float:right;">Logout
 							</button>
 							<button class="btn btn-warning"
@@ -50,7 +50,7 @@ $def with (page, vars=None)
 							</button>
 						$else:
 							<button class="btn btn-warning"
-								onclick="location.assign('/login');"
+								onclick="location.assign('$(page.base)login');"
 								style="float:right;">login
 							</button>
 							<button class="btn btn-warning"
