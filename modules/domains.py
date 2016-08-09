@@ -153,7 +153,7 @@ class domain_manager:
 	# update last active time of domain
 	def DomainActive(self,domain):
 		if self.is_domain(domain):
-			rec = self.domain_coll.update_one({'name' : domain},{'$set' : {'lastActive' : datetime.now()}})
+			rec = self.domain_coll.update({'name' : domain},{'$set' : {'lastActive' : datetime.now()}})
 			print "Domain Active - " + str(datetime.now())
 
 	# retrieve a list of editors for coordinators to manage
@@ -189,7 +189,7 @@ class domain_manager:
 			for r in range(len(editor_list)):
 				updated_list.append([editor_list[str(r)],"Editor"])
 			print updated_list
-			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
+			self.domain_coll.update({'name' : domain},{'$set' : {'users' : updated_list}})
 			return True
 		return False
 
@@ -199,7 +199,7 @@ class domain_manager:
 			updated_list = []
 			for r in range(len(usr_list)/2):
 				updated_list.append([usr_list[str(r)],usr_list["drop" + str(r)]])
-			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
+			self.domain_coll.update({'name' : domain},{'$set' : {'users' : updated_list}})
 			return True
 		return False
 

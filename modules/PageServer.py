@@ -149,7 +149,7 @@ class EditDom:
 				print "created" + domain
 				return "success"
 			if action == "Remove":
-				qv_domains.domain_coll.delete_one({'name': domain})
+				qv_domains.domain_coll.remove({'name': domain})
 				print "deleted " + domain
 				return "success"
 			if action == "Update":
