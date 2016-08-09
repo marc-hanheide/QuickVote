@@ -174,6 +174,8 @@ class domain_manager:
 	def get_list_of_users(self,domain):
 		if self.is_domain(domain):
 			recs = self.domain_coll.find_one({"name" : domain})
+			print "get_list_of_users: "
+			print recs
 			return recs['users']
 		return None
 

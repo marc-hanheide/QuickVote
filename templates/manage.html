@@ -74,12 +74,12 @@ $if A or Access == "Coord":
 									Manage All Users
 							</label>
 							<div class="form-group">
-
+								<datalist id="user-list">
+								$for u in usrs:
+									<option value="$:u">
+								</datalist>
 									<form id="editor-usr">
-										<datalist id="user-list">
-										$for u in usrs:
-											<option value="$:u">
-										</datalist>
+
 
 									</form>
 									<script>
@@ -121,6 +121,7 @@ $if A or Access == "Coord":
 											function CoordSendUsrs() {
 												var eles = $$("#editor-usr").children();
 												data = "";
+												ATret = true;
 												// all inputs except the empty end input
 												for (var i = 0; i < eles.length-1; i++) {
 													if(!AvaTest(eles[i].id,eles[i].value) && ATret) {

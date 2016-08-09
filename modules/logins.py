@@ -118,10 +118,10 @@ logman = loginmanager()
 
 class UserManager:
 	def get_usr_list(self):
-		if logman.isAdmin():
-			recs = qv_logins.find({"Username" : {"$exists" : True}})
-			if recs != None:
-				return recs
+		recs = qv_logins.find({"Username" : {"$exists" : True}})
+
+		if recs != None:
+			return recs
 		return None
 
 	def make_user_admin(self,usr):
