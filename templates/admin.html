@@ -1,6 +1,7 @@
-$def with (data)
-
+$def with (base,data,LI)
+$var base: $:base
 $var title: QuickVote Admin
+$var loggedIn: $:LI
 
 <script type="text/javascript">
 
@@ -87,10 +88,10 @@ $var title: QuickVote Admin
 			<div class="panel panel-default">
 			  	<div class="panel-heading">
 
-					<div class="btn-group"> 
+					<div class="btn-group">
 						<button id = "active_question" class="btn btn-default">
 							Question
-						</button> 
+						</button>
 						<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
 							<span class="caret"></span>
 						</button>
@@ -109,24 +110,24 @@ $var title: QuickVote Admin
 
 				<button class="btn btn-default" type="button">
 					<em class="glyphicon glyphicon-align-center"></em> Center
-				</button> 
+				</button>
 				<button class="btn btn-default" type="button">
 					<em class="glyphicon glyphicon-align-right"></em> Right
-				</button> 
+				</button>
 				<button class="btn btn-default" type="button">
 					<em class="glyphicon glyphicon-align-justify"></em> Justify
 				</button>
 			</div>
  -->
-  			
+
 					<a href="$data['results_url']" target="_blank" class="btn btn-primary btn-block" type="button">
 						Show Results
-					</a> 
+					</a>
                                         <a href="$data['history_url']" target="_blank" class="btn btn-primary btn-block" type="button">
                                                 Show History
                                         </a>
 
-					
+
 				</div>
 			</div>
 
@@ -158,7 +159,7 @@ $var title: QuickVote Admin
 					</div>
 					<button onclick="new_session();" class="btn btn-danger btn-block" type="button">
 						Start New Session
-					</button> 
+					</button>
 				</div>
 			</div>
 
@@ -172,14 +173,14 @@ $var title: QuickVote Admin
 			<form role="form" id="editform">
 				<small>
 				<div class="form-group">
-					 
+
 					<label for="uuid">
 						UUID
 					</label>
 					<input type="text" readonly="readonly" class="form-control" name="uuid" id="uuid" />
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="domain">
 						domain
 					</label>
@@ -187,21 +188,21 @@ $var title: QuickVote Admin
 				</div>
 				</small>
 				<div class="form-group">
-					 
+
 					<label for="question">
 						Question
 					</label>
 					<input type="text" readonly="readonly" class="form-control" name="question" id="question" placeholder="enter your question here, e.g. What is the meaning of life?"/>
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="options">
 						Options (comma-separated)
 					</label>
 					<input type="text" readonly="readonly" class="form-control" name="options" id="options" placeholder="comma-separated list of options, e.g. A,B,C"/>
 				</div>
 				<div class="form-group">
-					 
+
 					<label for="correct_opt">
 						All correct options (comma-separated)
 					</label>

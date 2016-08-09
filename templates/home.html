@@ -1,0 +1,113 @@
+$def with (base,DL,ML,IL,A)
+$var title: Quick Vote Home
+$var loggedIn: $:IL
+$var base: $:base
+	$if A:
+		<div class="row">
+			<div class="panel panel-default">
+			<div class="panel-heading">
+			<h3 class="panel-title">Admin Tools</h3>
+			</div>
+			<div class="panel-body">
+				<div class="col-md-12">
+					<p>Listed Bellow are the tools available to Admins for the management of the entire application overall:</p>
+							<a href="$(base)users" class="btn btn-primary btn-lg btn-block">Manage Users</a>
+				</div>
+			</div>
+			</div>
+		</div>
+	$if IL == True:
+		<div class="row">
+			<div class="panel panel-default">
+			<div class="panel-heading">
+			<h3 class="panel-title">Manage My Domains</h3>
+			</div>
+			<div class="panel-body">
+				<div class="col-md-12">
+					<p>Listed Bellow are all of the domains you have authorization to manage. Follow the domain name link to manage this domain. If you have Editor permission you can add, edit and remove questions as well as being able to view the domain and look at the session history. If you have Coord permission you are a Coordinator and you can do all that an Editor can do whilst also managing which Users have editor permission on the domain. Admin permission gives you access to everything including being able to delete domains.</p>
+					$for element in ML:
+						<a class="panel-title domain" href="$(base)$:element[0]/manage">$:element[0]</a>
+						$if A:
+							<p class="domain"><a href="#" onclick="removedomain('$:element[0]');" style="color:#ff0000;">delete domain</a> |
+						$else:
+							<p class="domain">
+						Last Active: $:element[1] | My Permissions:
+						$if A:
+							Admin
+						$else:
+							$:element[3]
+						</p>
+					$if A:
+						<div class="form-group">
+							<button id="NewDomainButton" class="btn btn-primary btn-lg btn-block">New Domain</button>
+						</div>
+						<script>
+							var newdom;
+							$$("document").ready(function(){newdom = $$("#newdom"); newdom.hide();});
+							$$("#NewDomainButton").click(function(){
+								newdom.fadeIn("slow");
+
+							});
+							function newdomaincancel() {
+								newdom.fadeOut("slow");
+							}
+							function newdomain() {
+								var d = $$("#newname").val();
+								$$.ajax({
+								type: "POST",
+								url:	"/Add/EditDom/"+d,
+								success: function(reply) {
+									if(reply == "success") {location.assign("$(base)");}
+								}
+								});
+							}
+							function removedomain(val) {
+								$$.ajax({
+								type: "POST",
+								url:	"/Remove/EditDom/"+val,
+								success: function(reply) {
+									if(reply == "success") {location.assign("$(base)");}
+								}
+								});
+							}
+						</script>
+				</div>
+			</div>
+			</div>
+		</div>
+	$if A:
+		<div id="newdom" class="row" style="position:fixed;top:25%;left:25%;z-index:1;height:50%;width:50%;">
+			<div class="panel panel-primary" style="height:100%;">
+				<div class="panel-heading">
+					<h3 class="panel-title">Add New Domain</h3>
+				</div>
+				<div class="panel-body" style="height:90%;">
+					<div class="col-md-12" style="height:100%;">
+
+						<label>New Domain Name</label>
+						<input class="form-control" id="newname" placeholder="Enter Domain Name"/>
+						<div style="position:absolute;bottom:15px;right:15px;">
+							<button class="btn btn-primary" onclick="newdomain();">Submit</button>
+							<button class="btn btn-danger" onclick="newdomaincancel();">Cancel</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	<div class="row">
+				<div class="panel panel-default">
+        <div class="panel-heading">
+        <h3 class="panel-title">List of all Domains</h3>
+        </div>
+        <div class="panel-body">
+            <div class="col-md-12">
+				<p>Listed Bellow are all of the domains currently being hosted. Follow the domain name link to submit
+				an answer to the active question on that domain. The domains bellow are listed by the most active first. This can be because it was edited recently or because the current question has recently been answered.</p>
+				$for element in DL:
+					<a class="panel-title domain" href="$(base)$:element[0]/">$:element[0]</a>
+					<p class="domain">Last Active: $:element[1] | Active Question: $:element[2]</p>
+
+			</div>
+		</div>
+		</div>
+	</div>

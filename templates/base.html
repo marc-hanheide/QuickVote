@@ -22,6 +22,9 @@ $def with (page, vars=None)
 		<script type="text/javascript" src="/static/js/bootbox.min.js"></script>
 		<link href="/static/css/style.css" rel="stylesheet" />
 
+		<link type="text/css" rel="stylesheet" href="/static/css/tables.css" />
+
+
 		<link href="/static/css/bootstrap-toggle.min.css" rel="stylesheet" />
 		<script type="text/javascript" src="/static/js/bootstrap-toggle.min.js"></script>
 
@@ -29,13 +32,31 @@ $def with (page, vars=None)
 
 	<body>
 		<nav class="navbar navbar-default">
-		  	<div class="container-fluid">
-	    		<div class="navbar-header">
-	      			<div class="navbar-brand" onclick="location.reload();">
-	        			<img alt="QV" src="/static/qv_logo.png" height="32px">QuickVote
+		  	<div class="container-fluid" >
+	    		<div class="navbar-header" style="width:100%;">
+	      			<div class="navbar-brand" style="width:100%;" onclick="/*location.reload();*/">
+	        			<img alt="QV" src="/static/qv_logo.png" height="32px" style="cursor:pointer;" onclick="location.assign('$(page.base)');">QuickVote
 	        			<button class="btn btn-warning"
 		    		        onclick="location.reload();">Reload
 	    				</button>
+						$if page.loggedIn == "True":
+							<button class="btn btn-warning"
+								onclick="location.assign('$(page.base)login');"
+								style="float:right;">Logout
+							</button>
+							<button class="btn btn-warning"
+								onclick="location.assign('https://github.com/marc-hanheide/QuickVote/wiki/Admin\'s-Guide');"
+								style="float:right;margin-right:15px;">Help
+							</button>
+						$else:
+							<button class="btn btn-warning"
+								onclick="location.assign('$(page.base)login');"
+								style="float:right;">login
+							</button>
+							<button class="btn btn-warning"
+								onclick="location.assign('https://github.com/marc-hanheide/QuickVote/wiki/User\'s-Guide');"
+								style="float:right;margin-right:15px;">Help
+							</button>
 
 	      			</div>
 
