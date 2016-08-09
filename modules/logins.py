@@ -59,7 +59,7 @@ class loginmanager:
 
 			# test if session information matches
 			if rec != None:
-				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
+				if rec['QV_Ses'].encode("utf-8") == ses:
 					print "Logged In"
 					return True
 		return False
@@ -77,7 +77,7 @@ class loginmanager:
 
 			# test if session information matches
 			if rec != None:
-				if hmac.compare_digest(rec['QV_Ses'].encode("utf-8"),ses):
+				if rec['QV_Ses'].encode("utf-8") == ses:
 					# Remove session from mongodb
 					qv_sessions.delete_one({'Username' : usr})
 
