@@ -15,4 +15,4 @@ else:
     base_url = "http://localhost/"
 
  # dummy data to stop proxy buffering
-dummy_data = range(0, 2048)
+dummy_data = range(0, 20480)

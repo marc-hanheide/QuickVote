@@ -1,0 +1,3 @@
+--document-root .
+--processes=1
+--threads=50
