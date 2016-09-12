@@ -1,0 +1,14 @@
+web:
+  build: .
+  environment:
+    - QV_BASE_URL=http://10.210.9.146:5000/
+  command: python -u app.py
+  ports:
+    - "5000:5000"
+  volumes:
+    - .:/quickvote
+  links:
+    - db
+db:
+  image: mongo:3.0.2
+
