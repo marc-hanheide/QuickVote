@@ -100,20 +100,20 @@ $var loggedIn: $:LI
       				document.getElementById("histogram").hidden = false;
       				if (last_data != null)
       					display_chart(last_data);
-      			} else {
-      				document.getElementById("histogram").hidden = true;
+      				} else {
+      					document.getElementById("histogram").hidden = true;
 
-      			}
-    		});
+      				}
+    			});
 
-            $$('#comment_toggle').change(function(){
-                if ($$(this).prop("checked")){
-                    //They want to show comments
-                    document.getElementById("comments").hidden = false;
-                }else{
-                    document.getElementById("comments").hidden = true;
-                }
-            });
+            		$$('#comment_toggle').change(function(){
+		                if ($$(this).prop("checked")){
+		                    //They want to show comments
+		                    document.getElementById("comments").hidden = false;
+		                }else{
+		                    document.getElementById("comments").hidden = true;
+		                }
+	                });
 
 		}
 	)
@@ -205,7 +205,7 @@ $var loggedIn: $:LI
 
                 <div class="checkbox-inline">
                     <label>
-                        <input id="comment_toggle" type="checkbox" data-toggle="toggle" checked>
+                        <input id="comment_toggle" type="checkbox" data-toggle="toggle">
                         Display Comments
                   </label>
                 </div>
@@ -217,11 +217,13 @@ $var loggedIn: $:LI
 		  		<h3 id="question" class="panel-title">Question</h3>
 
 		  		<div id="histogram" >
-		  		<canvas style="padding: 0;
+    		  		    <canvas style="padding: 0;
 								margin: auto;
 								display: block;
 								width: 600px;" id="resultChart" width="500" height="300"></canvas>
-				<textarea style="resize: none;overflow-y: scroll;" class="form-control" rows="3" id="comments"></textarea>
+				</div>
+				<div id="comments" hidden>
+				    <textarea style="resize: none;overflow-y: scroll;" class="form-control" rows="3"></textarea>
 				</div>
 		  	</div>
 	  	</div>
