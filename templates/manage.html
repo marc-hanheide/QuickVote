@@ -23,7 +23,7 @@ $if A:
 							var d = $$('#username').val();
 							$$.ajax({
 							type: "POST",
-							url:	"/Update/EditDom/"+d,
+							url:	"$(base)Update/EditDom/"+d,
 							success: function(reply) {
 								if(reply == "success") {location.assign("$(base)"+d+"/manage");}
 							}
@@ -170,7 +170,7 @@ $if A or Access == "Coord":
 		 										 $$.ajax({
 		 										 type: "POST",
 		 										 data: data,
-		 										 url:	"/$:domain/manage/update",
+		 										 url:	"$(base)$:domain/manage/update",
 		 										 success: function(reply) {
 		 												 $$("#reply").fadeOut("slow",
 		 													 $$("#reply").text(reply,
