@@ -55,7 +55,7 @@ $var base: $:base
 								var d = $$("#newname").val();
 								$$.ajax({
 								type: "POST",
-								url:	"/Add/EditDom/"+d,
+								url:	"$(base)Add/EditDom/"+d,
 								success: function(reply) {
 									if(reply == "success") {location.assign("$(base)");}
 								}
@@ -64,7 +64,7 @@ $var base: $:base
 							function removedomain(val) {
 								$$.ajax({
 								type: "POST",
-								url:	"/Remove/EditDom/"+val,
+								url:	"$(base)Remove/EditDom/"+val,
 								success: function(reply) {
 									if(reply == "success") {location.assign("$(base)");}
 								}
