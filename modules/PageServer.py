@@ -205,7 +205,6 @@ class MainageDomainUsers:
 		data = web.input()
 		if logman.LoggedIn():
 			# update editors in list
-			print data["0"]
 			if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Coord":
 				if qv_domains.update_list_of_editors(domain,data):
 					return "Successful!"
