@@ -580,7 +580,7 @@ class results:
         method_name = 'GET_' + str(mode)
         # Get the method from 'self'. Default to a lambda.
         method = getattr(self, method_name, self.GET_stream)
-        print method
+        #print method
         # Call the method as we return it
         return method(domain, uuid)
 
@@ -588,7 +588,7 @@ class results:
         block = False
         web.header("Content-Type", "text/event-stream")
         web.header('Cache-Control', 'no-cache')
-        web.header('Content-length:', 1000)
+        #web.header('Content-length:', 1000)
         while True:
             new_input.acquire()
             try:
@@ -600,8 +600,8 @@ class results:
 
             data = self.compute_results(domain, uuid)
             data['dummy'] = config.dummy_data
-
             r = self.response(dumps(data))
+            #print r
             yield r
 
     def GET_history(self, domain, uuid):
