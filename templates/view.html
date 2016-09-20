@@ -48,7 +48,7 @@ $var loggedIn: $:LI
 		    animation: false
 		});
 		$$("div#legend").html(chart_obj.generateLegend())
-		$$("textarea#comments").text(data['comments']);
+		$$("textarea#feedback").text(data['comments']);
 
 	}
 
@@ -223,7 +223,7 @@ $var loggedIn: $:LI
 								width: 600px;" id="resultChart" width="500" height="300"></canvas>
 				</div>
 				<div id="comments" hidden>
-				    <textarea style="resize: none;overflow-y: scroll;" class="form-control" rows="3"></textarea>
+				    <textarea id="feedback" style="resize: none;overflow-y: scroll;" class="form-control" rows="5"></textarea>
 				</div>
 		  	</div>
 	  	</div>
