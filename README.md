@@ -26,6 +26,10 @@ QuickVote is a simply voting web application designed for extreme simplicity, mo
 ## Running
 * `python app.py`
 
+## Docker
+
+QuickVote is also available to be deployed in Docker. Simply run `docker-compose up --build` from within the checked out repository.
+
 ### Running behind Apache Proxy
 
 Here is a working example of a configuration to run behind an Apache Reverse Proxy:
