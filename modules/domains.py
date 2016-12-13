@@ -47,6 +47,38 @@ class domain_manager:
     c = self.domain_coll.find_one({'name': domain})
     return c['active_question'] if c is not None else None
 
+  def get_n_groups(self, domain):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        return 0
+    if 'user_group' in c:
+        return c['user_group']
+    else:
+        return 0
+
+  def set_n_groups(self, domain, n):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        raise RuntimeError('domain %s not in database' % domain)
+    c['user_group'] = n
+    self.domain_coll.save(c)
+
+  def get_domain_session(self, domain):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        return None
+    if 'domain_uuid' in c:
+        return c['domain_uuid']
+    else:
+        return str(uuid4())
+
+  def set_domain_session(self, domain, id):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        raise RuntimeError('domain %s not in database' % domain)
+    c['domain_uuid'] = str(id)
+    self.domain_coll.save(c)
+
   def set_active_question(self, domain, uuid):
     glob.session_uuid
     c = self.domain_coll.find_one({'name': domain})

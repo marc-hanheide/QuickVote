@@ -3,40 +3,45 @@ session_uuid = uuid4()
 admin_uuid = uuid4()
 
 urls = {
-	# display filterable list of domains
-	'home':
-	{'pattern'	: '/',
-	 'class'	: 'home',
-	 'method'	: 'get'
-	 },
-	# manage domain
-	'manage':
-	{'pattern' 	: '/(.+)/manage',
-	 'class'	: 'manage',
-	 'method'	: 'get'
-	},
-	# edit / remove / add new domains
-	'EditDom':
-	{'pattern' 	: '/(.+)/EditDom/(.+)',
-	 'class'	: 'EditDom',
-	 'method'	: 'post'
-	},
-	'MainageDomainUsers':
-	{'pattern' 	: '/(.+)/manage/update',
-	 'class'	: 'MainageDomainUsers',
-	 'method'	: 'post'
-	},
-	# login page
-	 'mainlogin':
-	{'pattern'	: '/login',
-	 'class'	: 'mainlogin',
-	 'method'	: 'get'
-	 },
-	 'users':
- 	{'pattern'	: '/users',
- 	 'class'	: 'Users',
- 	 'method'	: 'get'
- 	 },
+    # display filterable list of domains
+    'home':
+    {'pattern'  : '/',
+     'class'    : 'home',
+     'method'   : 'get'
+     },
+    # manage domain
+    'manage':
+    {'pattern'  : '/(.+)/manage',
+     'class'    : 'manage',
+     'method'   : 'get'
+    },
+    'manage_group':
+    {'pattern'  : '/(.+)/manage/group',
+     'class'    : 'manage',
+     'method'   : 'post'
+    },
+    # edit / remove / add new domains
+    'EditDom':
+    {'pattern'  : '/(.+)/EditDom/(.+)',
+     'class'    : 'EditDom',
+     'method'   : 'post'
+    },
+    'MainageDomainUsers':
+    {'pattern'  : '/(.+)/manage/update',
+     'class'    : 'MainageDomainUsers',
+     'method'   : 'post'
+    },
+    # login page
+     'mainlogin':
+    {'pattern'  : '/login',
+     'class'    : 'mainlogin',
+     'method'   : 'get'
+     },
+     'users':
+    {'pattern'  : '/users',
+     'class'    : 'Users',
+     'method'   : 'get'
+     },
     'user':                             # arg1 is the domain (questionnaire)
     {'pattern': '/(.+)/$',
      'class': 'ask_question',
@@ -67,7 +72,7 @@ urls = {
      'class': 'login',
      'method': 'get'
      },
-    'logoff':                           # arg1 is the domain, arg2 the admin_url
+    'logoff':                          # arg1 is the domain, arg2 the admin_url
     {'pattern': '/(.+)/(.+)/logout',
      'class': 'logoff',
      'method': 'get'

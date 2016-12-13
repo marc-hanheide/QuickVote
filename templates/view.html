@@ -106,14 +106,14 @@ $var loggedIn: $:LI
       				}
     			});
 
-            		$$('#comment_toggle').change(function(){
-		                if ($$(this).prop("checked")){
-		                    //They want to show comments
-		                    document.getElementById("comments").hidden = false;
-		                }else{
-		                    document.getElementById("comments").hidden = true;
-		                }
-	                });
+  		$$('#comment_toggle').change(function(){
+          if ($$(this).prop("checked")){
+              //They want to show comments
+              document.getElementById("comments").hidden = false;
+          }else{
+              document.getElementById("comments").hidden = true;
+          }
+        });
 
 		}
 	)
@@ -181,7 +181,6 @@ $var loggedIn: $:LI
 					</button>
 					<ul class="dropdown-menu scrollable-menu">
 						$for q in data['existing_questions']:
-							</li>
 							<li>
 								<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
 							</li>
@@ -203,12 +202,12 @@ $var loggedIn: $:LI
 				  </label>
 				</div>
 
-                <div class="checkbox-inline">
-                    <label>
-                        <input id="comment_toggle" type="checkbox" data-toggle="toggle">
-                        Display Comments
-                  </label>
-                </div>
+        <div class="checkbox-inline">
+            <label>
+                <input id="comment_toggle" type="checkbox" data-toggle="toggle">
+                Display Comments
+          </label>
+        </div>
 
 
 		    	</h3>

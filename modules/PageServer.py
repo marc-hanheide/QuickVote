@@ -4,22 +4,47 @@ from logins import logman
 from logins import usrman
 from logins import qv_logins
 import glob
+from random import randint
+
+MAX_GROUPS = 3
 
 
-### Renderers for actual interface:
 class ask_question:
 
     def GET(self, domain):
-        uuid = qv_domains.get_active_question(domain)
-        qs = qv_questions.find_one({'uuid': uuid})
-        if qs is not None and 'image' not in qs:
-            qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-        data = {'qs': qs,
-                'session_uuid': glob.session_uuid,
-                'submit_url': glob.urls['user_post']['url_pattern'] % domain,
-                }
+        user_uuid = web.cookies().get('qv_user_uuid')
         qv_domains.DomainActive(domain)
-        return renderer.index(config.base_url,data,logman.LoggedIn())
+
+        if user_uuid is None:
+            web.setcookie('qv_user_uuid', uuid4(), 7200)
+            n_group = qv_domains.get_n_groups(domain)
+            print n_group
+            if n_group > 0:
+                group = randint(1, n_group)
+            else:
+                group = 0
+            web.setcookie('qv_user_group', str(group), 7200)
+
+            return renderer.start(config.base_url,
+                                  domain,
+                                  logman.LoggedIn())
+        else:
+            user_group = web.cookies(
+                qv_user_group='').qv_user_group
+
+            uuid = qv_domains.get_active_question(domain)
+            qs = qv_questions.find_one({'uuid': uuid})
+            if qs is not None and 'image' not in qs:
+                qs['image'] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+            data = {
+                    'user_group': user_group,
+                    'qs': qs,
+                    'session_uuid': glob.session_uuid,
+                    'submit_url': glob.urls['user_post']['url_pattern']
+                    % domain,
+                    }
+            return renderer.index(config.base_url, data,
+                                  logman.LoggedIn())
 
     def POST(self, domain):
         # verify the cookie is not set to the current session.
@@ -27,10 +52,15 @@ class ask_question:
         c = web.cookies(session_uuid=uuid4()).session_uuid
         if str(c) == str(glob.session_uuid):
             print "user submitted again to same session"
-            return renderer.duplicate(config.base_url,glob.urls['user']['url_pattern']
-                                      .replace('$', '') % domain,logman.LoggedIn())
+            return renderer.duplicate(config.base_url,
+                                      glob.urls['user']['url_pattern']
+                                      .replace('$', '') % domain,
+                                      logman.LoggedIn())
         else:
             web.setcookie('session_uuid', glob.session_uuid, 3600)
+
+        user_group = web.cookies(
+            qv_user_group='').qv_user_group
 
         data = {}
         data.update(web.input())
@@ -39,6 +69,7 @@ class ask_question:
             if type(v) is str:
                 data['env'][k.replace('.', '_')] = v
         data['inserted_at'] = datetime.now()
+        data['user_group'] = user_group
         data['session'] = qv_domains.get_active_session(domain,
                                                         data['uuid'])
         new_input.acquire()
@@ -47,14 +78,17 @@ class ask_question:
             new_input.notifyAll()
         finally:
             new_input.release()
-        return renderer.submit(config.base_url,glob.urls['user']['url_pattern']
-                               .replace('$', '') % domain,logman.LoggedIn())
+        return renderer.submit(config.base_url,
+                               glob.urls['user']['url_pattern']
+                               .replace('$', '') % domain, logman.LoggedIn())
+
 
 class mainlogin:
     def GET(self):
         if logman.LoggedIn():
             logman.Logout()
-        return renderer.mainlogin(config.base_url,logman.LoggedIn())
+        return renderer.mainlogin(config.base_url,
+                                  logman.LoggedIn())
 
     def POST(self):
         var = web.input()
@@ -66,12 +100,14 @@ class mainlogin:
                     return "Username is invalid! Use only Letters and Digits e.g. Derek123"
 
         # look for username within login collection
-        record = qv_logins.find_one({'Username' : var['Username']})
-        if record == None:
+        record = qv_logins.find_one({'Username': var['Username']})
+        if record is None:
             return "User does not exist!"
 
         # hash submited password and compare to record
-        if record['Password'].encode("utf-8") == hmac.new('QVkey123',var['Password'],hashlib.sha512).hexdigest():
+        if record['Password'].encode("utf-8") == hmac.new('QVkey123',
+                                                          var['Password'],
+                                                          hashlib.sha512).hexdigest():
 
             # create login session, redirect if success
             if logman.Login(var['Username']):
@@ -80,10 +116,11 @@ class mainlogin:
         else:
             return "Username or Password is Incorrect!"
 
+
 class Users:
     def GET(self):
         if logman.isAdmin():
-            return renderer.users(config.base_url,True,usrman.get_usr_list())
+            return renderer.users(config.base_url, True, usrman.get_usr_list())
         return web.notacceptable()
 
     def POST(self):
@@ -158,10 +195,22 @@ class EditDom:
                 print "changed name to " + domain
                 return "success"
         return "failed"
+
+
 class manage:
+    def POST(self, domain):
+        w = web.input()
+        n = w['team_size']
+        qv_domains.set_n_groups(domain, n)
+        qv_domains.set_domain_session(domain, uuid4())
+
+        return web.ok()
+
     def GET(self,domain):
         if logman.LoggedIn() == True:
             if qv_domains.is_domain(domain):
+                n_group = qv_domains.get_n_groups(domain)
+
                 recs = usrman.get_usr_list()
                 usrs = []
                 for r in recs:
@@ -174,7 +223,8 @@ class manage:
                         "Coord",                                                        # Access that user has to domain (string)
                         qv_domains.get_list_of_editors(domain),                         # list of editors for domain (string[] / None)
                         None,                                                           # list of coordinators for domain (string[] / None)
-                        usrs
+                        usrs,
+                        n_group
                     )
                 if logman.isAdmin():
                     return renderer.manage(config.base_url,
@@ -184,7 +234,8 @@ class manage:
                         None,                                                           # Access that user has to domain (string)
                         qv_domains.get_list_of_users(domain),                           # list of users for domain (string[[]] / None)
                         None,                                                           # list of coordinators for domain (string[] / None)
-                        usrs
+                        usrs,
+                        n_group
                     )
                 if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Editor":
                     return renderer.manage(config.base_url,
@@ -194,7 +245,8 @@ class manage:
                         "Editor",                                                       # Access that user has to domain (string)
                         [""],                                                           # list of editors for domain (string[] / None)
                         None,                                                           # list of coordinators for domain (string[] / None)
-                        usrs
+                        usrs,
+                        n_group
                     )
             else:
                 return web.notfound()
@@ -258,6 +310,8 @@ class editor:
         data['existing_questions'] = qsd
 
         return renderer.editor(config.base_url,data,logman.LoggedIn())
+
+
 class admin:
 
     def GET(self, domain):
@@ -285,6 +339,8 @@ class admin:
         data['existing_questions'] = qsd
 
         return renderer.admin(config.base_url,data,logman.LoggedIn())
+
+
 class view:
 
     def GET(self, domain):
@@ -300,13 +356,13 @@ class view:
             'vote_url': config.base_url+domain+'/',
             'get_url': glob.urls['results_get']['url_pattern'] % (domain, uuid),
             'existing_questions': [],
-            'active_question': qv_domains.get_active_question(domain),
+            'active_question': uuid,
             'activate_question_url': glob.urls['question_get']['url_pattern']
             % (domain, ''),
             'delete_url': glob.urls['answers_post']['url_pattern'] % (domain, ''),
             'get_results_url': glob.urls['results_get']['url_pattern']
             % (domain, ''),
-            'history_url': glob.urls['history']['url_pattern'] % (domain),
+            'history_url': glob.urls['history']['url_pattern'] % (domain)
         }
 
         qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
@@ -419,6 +475,7 @@ class questions:
             return dumps(q, default=json_util.default)
         else:
             return web.notfound()
+
 
 class results:
 
