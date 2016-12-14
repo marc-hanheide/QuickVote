@@ -52,7 +52,7 @@ class domain_manager:
     if c is None:
         return 0
     if 'user_group' in c:
-        return c['user_group']
+        return int(c['user_group'])
     else:
         return 0
 
@@ -67,16 +67,18 @@ class domain_manager:
     c = self.domain_coll.find_one({'name': domain})
     if c is None:
         return None
-    if 'domain_uuid' in c:
-        return c['domain_uuid']
+    if 'domain_session_uuid' in c:
+        return c['domain_session_uuid']
     else:
-        return str(uuid4())
+        new_uuid = uuid4()
+        self.set_domain_session(domain, new_uuid)
+        return str(new_uuid)
 
   def set_domain_session(self, domain, id):
     c = self.domain_coll.find_one({'name': domain})
     if c is None:
         raise RuntimeError('domain %s not in database' % domain)
-    c['domain_uuid'] = str(id)
+    c['domain_session_uuid'] = str(id)
     self.domain_coll.save(c)
 
   def set_active_question(self, domain, uuid):

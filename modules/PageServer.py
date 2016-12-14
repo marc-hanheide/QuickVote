@@ -6,24 +6,30 @@ from logins import qv_logins
 import glob
 from random import randint
 
-MAX_GROUPS = 3
-
 
 class ask_question:
 
     def GET(self, domain):
         user_uuid = web.cookies().get('qv_user_uuid')
+        domain_session_uuid_cookie = web.cookies().get(
+            'qv_domain_session_uuid')
+        domain_session_uuid = qv_domains.get_domain_session(domain)
         qv_domains.DomainActive(domain)
 
         if user_uuid is None:
-            web.setcookie('qv_user_uuid', uuid4(), 7200)
+            print 'new user'
+            web.setcookie('qv_user_uuid', str(uuid4()))
+        if domain_session_uuid_cookie is None or \
+           domain_session_uuid != domain_session_uuid_cookie:
             n_group = qv_domains.get_n_groups(domain)
-            print n_group
+
+            print n_group, domain_session_uuid, domain_session_uuid_cookie
             if n_group > 0:
                 group = randint(1, n_group)
             else:
                 group = 0
-            web.setcookie('qv_user_group', str(group), 7200)
+            web.setcookie('qv_user_group', str(group))
+            web.setcookie('qv_domain_session_uuid', str(domain_session_uuid))
 
             return renderer.start(config.base_url,
                                   domain,
