@@ -15,11 +15,6 @@ urls = {
      'class'    : 'manage',
      'method'   : 'get'
     },
-    'manage_group':
-    {'pattern'  : '/(.+)/manage/group',
-     'class'    : 'manage',
-     'method'   : 'post'
-    },
     # edit / remove / add new domains
     'EditDom':
     {'pattern'  : '/(.+)/EditDom/(.+)',
