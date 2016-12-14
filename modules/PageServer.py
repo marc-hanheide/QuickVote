@@ -5,7 +5,7 @@ from logins import usrman
 from logins import qv_logins
 import glob
 from random import randint
-
+from collections import defaultdict
 
 class ask_question:
 
@@ -504,6 +504,30 @@ class results:
 
         return data
 
+    def generate_group_results(self, group_correct_ratio, group_size_ratio):
+        try:
+            sorted_keys = group_correct_ratio.keys()
+            sorted_keys.sort()
+            dataset_corrects = {
+                'label': "Group Correctness",
+                'fillColor': "rgba(0,120,0,0.5)",
+                'data': [group_correct_ratio[r] for r in sorted_keys]
+            }
+            dataset_size = {
+                'label': "Group Size",
+                'fillColor': "rgba(100,100,120,0.5)",
+                'data': [group_size_ratio[r] for r in sorted_keys]
+            }
+            data = {
+                'labels':   sorted_keys,
+                'datasets': [dataset_size, dataset_corrects],
+            }
+        except Exception as e:
+            print e
+            pass
+
+        return data
+
     def compute_results(self, domain, uuid, session=None):
         if session is None:
             session = qv_domains.get_active_session(domain, uuid)
@@ -521,6 +545,12 @@ class results:
             tn = 0.0
             fp = 0.0
             fn = 0.0
+            gtp = defaultdict(float)
+            gtn = defaultdict(float)
+            gfp = defaultdict(float)
+            gfn = defaultdict(float)
+            group_total_correct_submissions = defaultdict(float)
+            group_total_submissions = defaultdict(float)
 
             user_agents = {}
 
@@ -543,6 +573,11 @@ class results:
                     pass
 
                 correct = True
+                if 'user_group' in answer:
+                    group = answer['user_group']
+                else:
+                    group = 0
+
                 for opt in question['options']:
                     if opt not in results:
                         results[opt] = 0
@@ -550,18 +585,24 @@ class results:
                         results[opt] += 1
                         if opt in question['correct']:
                             tp += 1
+                            gtp[group] += 1
                         else:
                             fp += 1
+                            gfp[group] += 1
                             correct = False
                     else:
                         if opt in question['correct']:
                             correct = False
                             fn += 1
+                            gfn[group] += 1
                         else:
                             tn += 1
+                            gtn[group] += 1
 
                 total_correct_submissions += 1 if correct else 0
                 total_submissions += 1
+                group_total_correct_submissions[group] += 1 if correct else 0
+                group_total_submissions[group] += 1
                 if len(answer['feedback']) > 0:
                     comments.append(answer['feedback'])
 
@@ -599,8 +640,18 @@ class results:
             except:
                 corrects_ratio = 1
 
+            group_correct_ratio = defaultdict(float)
+            group_size_ratio = defaultdict(float)
+            for g in group_total_submissions:
+                group_correct_ratio[g] = group_total_correct_submissions[g] /\
+                    group_total_submissions[g]
+                group_size_ratio[g] = group_total_submissions[g] /\
+                    total_submissions
+
             data = {
-                'userChart': self.generate_user_results(user_agents),
+                # 'userChart': self.generate_user_results(user_agents),
+                'userChart': self.generate_group_results(group_correct_ratio,
+                                                         group_size_ratio),
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
                 'comments': comments,
@@ -610,7 +661,9 @@ class results:
                     'percent': corrects_ratio,
                     'sensitivity': sensitivity,
                     'specificity': specificity,
-                    'accuracy': accuracy
+                    'accuracy': accuracy,
+                    'group_correct': group_correct_ratio,
+                    'group_size_ratio': group_size_ratio
                 },
                 'percent': "%2.1f%%"
                 % (corrects_ratio * 100.0),
