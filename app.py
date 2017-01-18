@@ -1,7 +1,7 @@
 import sys
 import os
 abspath = os.path.dirname(__file__)
-print abspath
+print (abspath)
 
 if len(abspath) > 0:
     sys.path.append(abspath)
@@ -18,7 +18,7 @@ import signal
 from os import _exit
 import time
 
-from urlparse import urlparse
+from urllib.parse  import urlparse
 
 from modules.PageServer import *
 
@@ -33,14 +33,14 @@ else:
     app = web.application(glob.urls, globals(), autoreload=False)
 
 path_prefix = urlparse(config.base_url).path
-print "path_prefix = " + path_prefix
+print ("path_prefix = " + path_prefix)
 for v in glob.urls.values():
     app.add_mapping(v['pattern'], v['class'])
     v['url_pattern'] = path_prefix + v['pattern'][1:].replace('(.+)', '%s')
-    print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
+    print ('(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern']))
 
 def signal_handler(signum, frame):
-    print "stopped."
+    print ("stopped.")
     _exit(signal.SIGTERM)
 
 if __name__ == '__main__':

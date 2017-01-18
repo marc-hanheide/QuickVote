@@ -62,7 +62,7 @@ class domain_manager:
 		if c is None:
 			raise RuntimeError('domain %s not in database' % domain)
 		if 'session' not in c:
-			print "NOT IN YET"
+			print ("NOT IN YET")
 			c['session'] = {}
 		if suuid is None:
 			suuid = str(uuid4())
@@ -103,19 +103,19 @@ class domain_manager:
 		if not self.is_domain(domain):
 			return None
 		# get user's access from domain
-		print "finding - " + str('users.'+user)
+		print ("finding - " + str('users.'+user))
 		access = self.domain_coll.find_one({'name' : domain, 'users' : {"$exists" : True}})
 
 		# return user's level of access or none
 		if access == None:
-			print "Access Denied!"
+			print ("Access Denied!")
 			return None
 
 		usr_exists = False
 		permission = ""
 		try:
 			for i in access['users']:
-				print i
+				print (i)
 				if i[0] == user:
 					usr_exists = True
 					permission = i[1]
@@ -124,7 +124,7 @@ class domain_manager:
 			return None
 
 		if usr_exists:
-			print permission
+			print (permission)
 			self.DomainActive(domain)   # Update last active time of domain
 			return permission
 		else:
@@ -141,7 +141,7 @@ class domain_manager:
 			td = int(tst.days) # days
 			th = int(math.floor(tst.total_seconds()/(60*60))) # hours
 			tm = int(math.floor((tst.total_seconds()/60)%60)) # minutes
-			print "{} days, {} hrs, {} mins".format(td,th,tm)
+			print ("{} days, {} hrs, {} mins".format(td,th,tm))
 			q = ""
 			if r['active_question'] == None:
 				q = "N/A"
@@ -154,7 +154,7 @@ class domain_manager:
 	def DomainActive(self,domain):
 		if self.is_domain(domain):
 			rec = self.domain_coll.update_one({'name' : domain},{'$set' : {'lastActive' : datetime.now()}})
-			print "Domain Active - " + str(datetime.now())
+			print ("Domain Active - " + str(datetime.now()))
 
 	# retrieve a list of editors for coordinators to manage
 	def get_list_of_editors(self,domain):
@@ -164,7 +164,7 @@ class domain_manager:
 			for l in recs['users']:
 				if l[1] == 'Editor':
 					usr_list.append(l[0])
-			print usr_list
+			print (usr_list)
 			if len(usr_list) == 0:
 				return None
 			return usr_list
@@ -188,7 +188,7 @@ class domain_manager:
 
 			for r in range(len(editor_list)):
 				updated_list.append([editor_list[str(r)],"Editor"])
-			print updated_list
+			print (updated_list)
 			self.domain_coll.update_one({'name' : domain},{'$set' : {'users' : updated_list}})
 			return True
 		return False

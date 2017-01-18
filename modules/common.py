@@ -19,7 +19,7 @@ from uuid import uuid4
 from threading import Condition
 from pymongo import MongoClient
 
-import config
+import modules.config as config
 client = MongoClient(config.mongo_host, config.mongo_port)
 
 new_input = Condition()
