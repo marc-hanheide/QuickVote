@@ -71,7 +71,7 @@ class mainlogin:
             return "User does not exist!"
 
         # hash submited password and compare to record
-        if record['Password'] == hmac.new( b'QVkey123', var['Password'].encode("UTF-8"), hashlib.sha512).hexdigest():
+        if hmac.compare_digest(record['Password'], hmac.new( b'QVkey123', var['Password'].encode("UTF-8"), hashlib.sha512).hexdigest()):
             # create login session, redirect if success
             if logman.Login(var['Username']):
                 # send user to index page
