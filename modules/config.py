@@ -12,7 +12,10 @@ else:
 if 'QV_BASE_URL' in os.environ:
     base_url = os.environ['QV_BASE_URL']
 else:
-    base_url = "http://localhost/"
+    base_url = "http://localhost"
+    if listen_port != 80 or listen_port != 443: # if the port is required in the URL, add it
+        base_url = base_url + ":" + str(listen_port)  # e.g. http://localhost:5000
+    base_url = base_url + "/" # Needs a trailing slash at the end...
 
  # dummy data to stop proxy buffering
 dummy_data = range(0, 20480)
