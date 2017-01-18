@@ -1,5 +1,5 @@
-from common import *
-from domains import qv_domains
+from modules.common import *
+from modules.domains import qv_domains
 
 # new login collection
 qv_logins = qv_db['logins']
@@ -7,11 +7,11 @@ qv_logins.create_index([('Username',ASCENDING)],unique=True)
 
 # create default login if no login exists
 if qv_logins.find().count() == 0:
-	qv_logins.insert({
-		'Username' : 'Admin',
-		'Password' : hmac.new('QVkey123','1234',hashlib.sha512).hexdigest(),
-		'isAdmin'  : True
-	})
+    qv_logins.insert({
+        'Username' : 'Admin',
+        'Password' : hmac.new(b'QVkey123', '1234'.encode('utf-8'), hashlib.sha512).hexdigest(), # hash methods in python 3 require the key (and message) to be a byte array. See https://docs.python.org/3/library/hmac.html
+        'isAdmin'  : True
+    })
 
 # new login session
 qv_sessions = qv_db['sessions']
@@ -32,14 +32,14 @@ class loginmanager:
 	def Login(self,user):
 		global qv_sessions
 		sesunhash_tmp = user + str(datetime.utcnow()) + self.RandomString(10)
-		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
+		seshash_tmp = hmac.new( b'QVkey123', sesunhash_tmp.encode('utf-8'), hashlib.sha512).hexdigest()
 		if qv_sessions.find_one({"Username" : user}) != None:
 			qv_sessions.delete_one({"Username" : user})
 		try:
 			# create session in qv_sessions
 			qv_sessions.insert({'createdAt' : datetime.utcnow(), 'Username' : user, 'QV_Ses' : seshash_tmp})
 		except:
-			print "Session Creation Failed!"
+			print ("Session Creation Failed!")
 			return False
 		# create session cookies
 		web.setcookie('QV_Usr',user)
@@ -60,7 +60,7 @@ class loginmanager:
 			# test if session information matches
 			if rec != None:
 				if rec['QV_Ses'].encode("utf-8") == ses:
-					print "Logged In"
+					print ("Logged In")
 					return True
 		return False
 
@@ -85,29 +85,29 @@ class loginmanager:
 					web.setcookie('QV_Usr','')
 					web.setcookie('QV_Ses','')
 
-					print "Logged Out"
+					print ("Logged Out")
 					return True
-		print "Logout failed!"
+		print ("Logout failed!")
 		return False
 
 	def DomainLogin(self,domain):
 		# check logged in
 		if not logman.LoggedIn():
-			print "Failed Login!"
+			print ("Failed Login!")
 			return False
 
 		# check for valid domain
 		if not qv_domains.is_domain(domain):
-			print "Failed domain check!"
+			print ("Failed domain check!")
 			return False
 
 		# check that user has access to this domain
 		attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
 		if  logman.isAdmin() or attempt_at_access == "Coord" or attempt_at_access == "Editor":
-			print "Authourized"
+			print ("Authourized")
 			return True
 		else:
-			print "Failed Access!"
+			print ("Failed Access!")
 			return False
 
 	def isAdmin(self):
