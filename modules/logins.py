@@ -34,7 +34,7 @@ class loginmanager:
 		sesunhash_tmp = user + str(datetime.utcnow()) + self.RandomString(10)
 		seshash_tmp = hmac.new('QVkey123',sesunhash_tmp,hashlib.sha512).hexdigest()
 		if qv_sessions.find_one({"Username" : user}) != None:
-			qv_sessions.delete_one({"Username" : user})
+			qv_sessions.remove({"Username" : user})
 		try:
 			# create session in qv_sessions
 			qv_sessions.insert({'createdAt' : datetime.utcnow(), 'Username' : user, 'QV_Ses' : seshash_tmp})
@@ -79,7 +79,7 @@ class loginmanager:
 			if rec != None:
 				if rec['QV_Ses'].encode("utf-8") == ses:
 					# Remove session from mongodb
-					qv_sessions.delete_one({'Username' : usr})
+					qv_sessions.remove({'Username' : usr})
 
 					# overwrite cookie data as blank
 					web.setcookie('QV_Usr','')
@@ -118,10 +118,10 @@ logman = loginmanager()
 
 class UserManager:
 	def get_usr_list(self):
-		if logman.isAdmin():
-			recs = qv_logins.find({"Username" : {"$exists" : True}})
-			if recs != None:
-				return recs
+		recs = qv_logins.find({"Username" : {"$exists" : True}})
+
+		if recs != None:
+			return recs
 		return None
 
 	def make_user_admin(self,usr):
@@ -151,7 +151,7 @@ class UserManager:
 	def delete_user(self,usr):
 		if logman.isAdmin():
 			try:
-				qv_logins.delete_one({"Username" : usr})
+				qv_logins.remove({"Username" : usr})
 				return True
 			except:
 				return False
