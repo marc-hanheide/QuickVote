@@ -18,7 +18,10 @@ import signal
 from os import _exit
 import time
 
-from urllib.parse  import urlparse
+try:
+    from urllib.parse import urlparse # Try and import the new urlparse module
+except ImportError: # We can't (maybe python 2)
+    from urlparse import urlparse # Try and import the old module...
 
 from modules.PageServer import *
 
