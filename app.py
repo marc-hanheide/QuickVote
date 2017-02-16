@@ -22,6 +22,7 @@ from urlparse import urlparse
 
 from modules.PageServer import *
 
+
 class QuickVoteApp(web.application):
     def run(self, *middleware):
         func = self.wsgifunc(*middleware)
@@ -38,6 +39,7 @@ for v in glob.urls.values():
     app.add_mapping(v['pattern'], v['class'])
     v['url_pattern'] = path_prefix + v['pattern'][1:].replace('(.+)', '%s')
     print '(%s, %s, %s)' % (v['pattern'], v['class'], v['url_pattern'])
+
 
 def signal_handler(signum, frame):
     print "stopped."

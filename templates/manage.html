@@ -1,4 +1,4 @@
-$def with (base,domain, LI, A, Access, Editors, Coordinators, usrs)
+$def with (base,domain, LI, A, Access, Editors, Coordinators, usrs, n_groups)
 $var title: $:domain
 $var loggedIn: $:LI
 $var base: $:base
@@ -51,6 +51,22 @@ $if LI:
 							<a class="domain" href="$(base)$:domain/view">View Active Question</a>
 							<a class="domain" href="$(base)$:domain/history">Review Past Votes</a>
 						</div>
+						<div class="input-group">
+						  <span class="input-group-addon" id="basic-addon1">Team Size</span>
+							<button id = "team_size" class="btn btn-default" aria-describedby="basic-addon1">
+								$n_groups
+							</button>
+							<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu scrollable-menu">
+								$for i in [0,1,2,3,4,5,6]:
+									<li>
+										<a onclick="team_size(this.id);" id="$i">$i</a>
+									</li>
+							</ul>
+						</div>
+
 				</div>
 			</div>
 		</div>
@@ -277,4 +293,32 @@ $if A or Access == "Coord":
 			});
 			return false;
 		}
+
+		function team_size(n) {
+			param = {
+				'team_size': n
+			};
+			console.log(location.pathname)
+
+			$$.ajax({
+				type: "POST",
+				url:	location.pathname,
+
+				data: param,
+				success: function(reply) {
+					$$("#team_size").text(n);
+					console.log(reply)
+
+					}
+			});
+
+
+			// $$.getJSON(location.pathname + "/group/", param, function(data) {
+			// 	$$("#team_size").text(n);
+			// 	console.log(data)
+
+			// });
+
+		}
+
 	</script>

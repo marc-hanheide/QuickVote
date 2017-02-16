@@ -12,7 +12,7 @@ else:
 if 'QV_BASE_URL' in os.environ:
     base_url = os.environ['QV_BASE_URL']
 else:
-    base_url = "http://localhost/"
+    base_url = "http://localhost:5000/"
 
  # dummy data to stop proxy buffering
 dummy_data = range(0, 20480)
