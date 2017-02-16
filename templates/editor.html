@@ -82,14 +82,6 @@ $var base: $:base
 		$$("#correct_opt").val("");
 	}
 
-	function group_question() {
-		$$("#uuid").val("groups");
-		$$("#domain").val("$data['domain']");
-		$$("#question").val("Team Assignment");
-		$$("#options").val("1,2,3");
-		$$("#correct_opt").val("");
-	}
-
 	function submit_edits() {
 		console.log("save")
 		var d = $$( "#editform" ).serialize()
@@ -299,7 +291,6 @@ $var base: $:base
 				<ul class="dropdown-menu scrollable-menu">
 					<li>
 						<a onclick="new_question();">New</a>
-						<a onclick="group_question();">Group Assignment</a>
 					</li>
 					<li class="divider">
 					$for q in data['existing_questions']:
