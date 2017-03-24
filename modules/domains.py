@@ -29,6 +29,10 @@ class domain_manager:
         }
       )
 
+  def get_admin_url(self, domain):
+    c = self.domain_coll.find_one({'name': domain})
+    return c['admin_url'] if c is not None else None
+
   def get_name_from_admin_url(self, admin_url):
     c = self.domain_coll.find_one({'admin_url': admin_url})
     return c['name'] if c is not None else None

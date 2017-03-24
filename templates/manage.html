@@ -1,4 +1,4 @@
-$def with (base,domain, LI, A, Access, Editors, Coordinators, usrs, n_groups)
+$def with (base,domain, LI, A, Access, Editors, Coordinators, usrs, n_groups, admin_url)
 $var title: $:domain
 $var loggedIn: $:LI
 $var base: $:base
@@ -47,9 +47,10 @@ $if LI:
         <div class="panel-body">
 					<div class="col-md-12">
 						<div class="form-group">
-							<a class="domain" href="$(base)$:domain/editor">Edit Domain Questions</a>
-							<a class="domain" href="$(base)$:domain/view">View Active Question</a>
-							<a class="domain" href="$(base)$:domain/history">Review Past Votes</a>
+							<a class="domain btn btn-default" href="$(base)$:domain/editor">Edit Domain Questions</a>
+							<a class="domain btn btn-default" href="$(base)$:domain/view">View Active Question</a>
+							<label>secret url: </label> <a href="$admin_url">$admin_url</a>
+							<a class="domain btn btn-default" href="$(base)$:domain/history">Review Past Votes</a>
 						</div>
 						<div class="input-group">
 						  <span class="input-group-addon" id="basic-addon1">Team Size</span>

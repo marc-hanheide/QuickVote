@@ -6,6 +6,7 @@ from logins import qv_logins
 import glob
 from random import randint
 from collections import defaultdict
+from hashlib import md5
 
 class ask_question:
 
@@ -230,7 +231,11 @@ class manage:
                         qv_domains.get_list_of_editors(domain),                         # list of editors for domain (string[] / None)
                         None,                                                           # list of coordinators for domain (string[] / None)
                         usrs,
-                        n_group
+                        n_group,
+                        config.base_url +
+                        domain +
+                        '/view?magic=' + qv_domains.get_admin_url(domain)
+
                     )
                 if logman.isAdmin():
                     return renderer.manage(config.base_url,
@@ -241,7 +246,10 @@ class manage:
                         qv_domains.get_list_of_users(domain),                           # list of users for domain (string[[]] / None)
                         None,                                                           # list of coordinators for domain (string[] / None)
                         usrs,
-                        n_group
+                        n_group,
+                        config.base_url +
+                        domain +
+                        '/view?magic=' + qv_domains.get_admin_url(domain)
                     )
                 if qv_domains.Access_domain(domain,web.cookies().get('QV_Usr')) == "Editor":
                     return renderer.manage(config.base_url,
@@ -353,7 +361,15 @@ class view:
         # verify the cookie is not set to the current session.
         # in that case it would be a resubmission
         if not logman.DomainLogin(domain):
-            return web.notacceptable()
+            user_data = web.input()
+            print qv_domains.get_admin_url(domain)
+            if hasattr(user_data, "magic"):
+                if user_data.magic == qv_domains.get_admin_url(domain):
+                    pass
+                else:
+                    return web.notacceptable()
+            else:
+                return web.notacceptable()
 
         uuid = qv_domains.get_active_question(domain)
         data = {
@@ -378,6 +394,8 @@ class view:
         data['existing_questions'] = qsd
 
         return renderer.view(config.base_url,data,logman.LoggedIn())
+
+
 class history:
 
     def GET(self, domain):
