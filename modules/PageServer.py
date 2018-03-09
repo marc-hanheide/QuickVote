@@ -208,9 +208,10 @@ class manage:
     def POST(self, domain):
         w = web.input()
         n = w['team_size']
+        race = w['race_enabled']
         qv_domains.set_n_groups(domain, n)
         qv_domains.set_domain_session(domain, uuid4())
-
+        qv_domains.set_race_enabled(domain, race)
         return web.ok()
 
     def GET(self,domain):
@@ -522,27 +523,31 @@ class results:
 
         return data
 
-    def generate_group_results(self, group_correct_ratio, group_size_ratio):
-        try:
-            sorted_keys = group_correct_ratio.keys()
-            sorted_keys.sort()
-            dataset_corrects = {
-                'label': "Group Correctness",
-                'fillColor': "rgba(0,120,0,0.5)",
-                'data': [group_correct_ratio[r] for r in sorted_keys]
-            }
-            dataset_size = {
-                'label': "Group Size",
-                'fillColor': "rgba(100,100,120,0.5)",
-                'data': [group_size_ratio[r] for r in sorted_keys]
-            }
-            data = {
-                'labels':   sorted_keys,
-                'datasets': [dataset_size, dataset_corrects],
-            }
-        except Exception as e:
-            print e
-            pass
+    def generate_group_results(self, domain, group_correct_ratio, group_size_ratio):
+
+        race_enabled = qv_domains.get_race_enabled(domain)
+        if race_enabled != true:
+            try:
+                sorted_keys = group_correct_ratio.keys()
+                sorted_keys.sort()
+                dataset_corrects = {
+                    'label': "Group Correctness",
+                    'fillColor': "rgba(0,120,0,0.5)",
+                    'data': [group_correct_ratio[r] for r in sorted_keys]
+                }
+                dataset_size = {
+                    'label': "Group Size",
+                    'fillColor': "rgba(100,100,120,0.5)",
+                    'data': [group_size_ratio[r] for r in sorted_keys]
+                }
+                data = {
+                    'labels':   sorted_keys,
+                    'datasets': [dataset_size, dataset_corrects],
+                }
+            except Exception as e:
+                print e
+                pass
+    #    else:
 
         return data
 
@@ -668,7 +673,7 @@ class results:
 
             data = {
                 # 'userChart': self.generate_user_results(user_agents),
-                'userChart': self.generate_group_results(group_correct_ratio,
+                'userChart': self.generate_group_results(domain, group_correct_ratio,
                                                          group_size_ratio),
                 'labels':   sorted_keys,
                 'datasets': [dataset, dataset_c],
@@ -735,7 +740,7 @@ class results:
             data['dummy'] = config.dummy_data
             r = self.response(dumps(data))
             #print r
-            yield r
+            return r
 
     def GET_history(self, domain, uuid):
         web.header('Content-Type', 'application/json')

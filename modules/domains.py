@@ -67,6 +67,22 @@ class domain_manager:
     c['user_group'] = n
     self.domain_coll.save(c)
 
+  def set_race_enabled(self, domain, race):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        raise RuntimeError('domain %s not in database' % domain)
+    c['race_enabled'] = race
+    self.domain_coll.save(c)
+
+  def get_race_enabled(self, domain):
+    c = self.domain_coll.find_one({'name': domain})
+    if c is None:
+        return false
+    if 'race_enabled' in c:
+        return (c['race_enabled'])
+    else:
+        return false
+
   def get_domain_session(self, domain):
     c = self.domain_coll.find_one({'name': domain})
     if c is None:
@@ -108,8 +124,6 @@ class domain_manager:
     glob.session_uuid = suuid
     self.domain_coll.save(c)
     return suuid
-
-
 
   def get_active_session(self, domain, quuid):
     c = self.domain_coll.find_one({'name': domain})

@@ -67,7 +67,10 @@ $if LI:
 									</li>
 							</ul>
 						</div>
-
+						<div id="divEnableRace">
+							<input type="checkbox" id="enableRace" onclick="enableRace()">
+							<label for="enableRace">Enable Rocket Race?</label>
+						</div>
 				</div>
 			</div>
 		</div>
@@ -295,11 +298,30 @@ $if A or Access == "Coord":
 			return false;
 		}
 
+		function enableRace() {
+			var checkedState = $$("#enableRace")[0].checked;
+			param = {
+				'race_enabled' : checkedState
+			}
+
+			$$.ajax({
+				type: "POST",
+				url:	location.pathname,
+				data: param
+			});
+		}
+
 		function team_size(n) {
 			param = {
 				'team_size': n
 			};
-			console.log(location.pathname)
+			console.log(location.pathname);
+
+			if (n == "0" || n == "1") {
+				$$("#divEnableRace").hide();
+			} else {
+				$$("#divEnableRace").show();
+			}
 
 			$$.ajax({
 				type: "POST",
@@ -309,8 +331,7 @@ $if A or Access == "Coord":
 				success: function(reply) {
 					$$("#team_size").text(n);
 					console.log(reply)
-
-					}
+				}
 			});
 
 
