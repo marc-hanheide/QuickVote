@@ -6,6 +6,19 @@ $var loggedIn: $:LI
 <script type="text/javascript">
 
 	last_data = null;
+	var race_background = new Image();
+	var rocket_off = new Image();
+	var rocket_on = new Image();
+	var rocket = new Image();
+	var rocket_state = false;
+	var rr_canvas;
+	var rr_ctx;
+
+	function loadImages() {
+		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
+		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
+		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
+	}
 
 	function new_session() {
 		var question_uuid = "$data['active_question']";
@@ -84,9 +97,44 @@ $var loggedIn: $:LI
 		console.log(data);
 	}
 
+	function display_team_race() {
+
+		rr_ctx.drawImage(race_background,0,0);
+		setInterval(function() {
+			display_rockets();
+		}, 400);
+	}
+
+	function display_rockets() {
+		updateFrame();
+		if (rocket_state == true) {
+				rr_ctx.drawImage(rocket,30,80,50,120);
+		} else {
+				rr_ctx.drawImage(rocket,30,80,50,90);
+		}
+
+	}
+
+	function updateFrame() {
+		if (rocket_state == true) {
+			rocket = rocket_off;
+			rocket_state = false;
+		} else {
+			rocket = rocket_on;
+			rocket_state = true;
+		}
+		rr_ctx.fillStyle = "black";
+		rr_ctx.rect(30,80,50,120);
+		rr_ctx.fill();
+	}
+
 
 	$$(document).ready(function () {
 			update();
+			loadImages();
+
+			rr_canvas = document.getElementById("rocketRace");
+			rr_ctx = rr_canvas.getContext("2d");
 			Chart.defaults.global.responsive = true;
 
 //				$$.getJSON("$data['get_url']", function (data) {
@@ -116,6 +164,19 @@ $var loggedIn: $:LI
           }
         });
 
+				$$('#rocket_race').change(function(){
+						if ($$(this).prop("checked")){
+								//They want to show the rocket race
+								document.getElementById("userChartContainer").hidden = true;
+								document.getElementById("rocketRaceContainer").hidden = false;
+								display_team_race();
+						}else{
+								document.getElementById("userChartContainer").hidden = false;
+								document.getElementById("rocketRaceContainer").hidden = true;
+								if (last_data != null)
+	      					display_user_chart(last_data);
+						}
+					});
 		}
 	)
 </script>
@@ -210,6 +271,12 @@ $var loggedIn: $:LI
           </label>
         </div>
 
+				<div class="checkbox-inline">
+				<label>
+					<input id="rocket_race" type="checkbox" data-toggle="toggle">
+					Rocket Race
+				</label>
+			</div>
 
 		    	</h3>
 		  	</div>
@@ -227,7 +294,7 @@ $var loggedIn: $:LI
 				</div>
 		  	</div>
 	  	</div>
-		<div class="panel panel-default">
+		<div class="panel panel-default" id="userChartContainer">
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">Team Performance
 		    	</h3>
@@ -238,8 +305,18 @@ $var loggedIn: $:LI
 								display: block;
 								width: 600px;" id="userChart" width="500" height="300"></canvas>
 		  	</div>
-
-		</div>
+			</div>
+			<div class="panel panel-default" id="rocketRaceContainer" hidden="true">
+					<div class="panel-heading">
+						<h3 class="panel-title">Team Performance
+						</h3>
+					</div>
+				<div class="panel-body">
+		  		<canvas style="padding: 0;
+								margin: auto;
+								width: 100%;" id="rocketRace" width="1000" height="400"></canvas>
+		  	</div>
+			</div>
 
 	</div>
 </div>
