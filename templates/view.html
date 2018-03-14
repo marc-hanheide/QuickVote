@@ -10,12 +10,14 @@ $var loggedIn: $:LI
 	var rocket_off = new Image();
 	var rocket_on = new Image();
 	var rocket = new Image();
-	var rocket_state = false;
+	var rocket_state = true;
 	var rr_canvas;
 	var rr_ctx;
+	var x;
+	var y;
 
 	function loadImages() {
-		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
+		race_background.src = "https://mdn.mozillademos.org/files/1456/Canvas_sun.png";
 		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
 		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
 	}
@@ -98,34 +100,38 @@ $var loggedIn: $:LI
 	}
 
 	function display_team_race() {
+		rr_ctx.fillStyle = "black";
+		rr_ctx.rect(0,0,1000,900);
+		rr_ctx.fill();
 
-		rr_ctx.drawImage(race_background,0,0);
+		rr_ctx.drawImage(race_background,700,50,500,500);
 		setInterval(function() {
 			display_rockets();
 		}, 400);
 	}
 
 	function display_rockets() {
-		updateFrame();
+			updateFrame();
 		if (rocket_state == true) {
-				rr_ctx.drawImage(rocket,30,80,50,120);
+				rr_ctx.drawImage(rocket,x,y,50,120);
+				rocket_state = false;
 		} else {
-				rr_ctx.drawImage(rocket,30,80,50,90);
+				rr_ctx.drawImage(rocket,x,y,50,90);
+	      rocket_state = true;
 		}
-
+		y = y - 5;
 	}
 
 	function updateFrame() {
 		if (rocket_state == true) {
-			rocket = rocket_off;
-			rocket_state = false;
-		} else {
 			rocket = rocket_on;
-			rocket_state = true;
+		} else {
+			rocket = rocket_off;
 		}
 		rr_ctx.fillStyle = "black";
-		rr_ctx.rect(30,80,50,120);
+		rr_ctx.rect(x,y,50,120);
 		rr_ctx.fill();
+		rr_ctx.drawImage(race_background,700,50,500,500);
 	}
 
 
@@ -133,6 +139,8 @@ $var loggedIn: $:LI
 			update();
 			loadImages();
 
+			x = 50;
+			y = 700;
 			rr_canvas = document.getElementById("rocketRace");
 			rr_ctx = rr_canvas.getContext("2d");
 			Chart.defaults.global.responsive = true;
@@ -142,6 +150,7 @@ $var loggedIn: $:LI
 			var source = new EventSource("$data['get_url']");
 			source.onmessage = function(event) {
 			    update_chart(JSON.parse(event.data));
+					update_race(JSON.parse(event.data));
 			};
 
 			$$('#display_toggle').change(function() {
@@ -174,7 +183,7 @@ $var loggedIn: $:LI
 								document.getElementById("userChartContainer").hidden = false;
 								document.getElementById("rocketRaceContainer").hidden = true;
 								if (last_data != null)
-	      					display_user_chart(last_data);
+	      					update_chart(last_data);
 						}
 					});
 		}
@@ -303,7 +312,7 @@ $var loggedIn: $:LI
 		  		<canvas style="padding: 0;
 								margin: auto;
 								display: block;
-								width: 600px;" id="userChart" width="500" height="300"></canvas>
+								width: 100%;" id="userChart" width="1000" height="800"></canvas>
 		  	</div>
 			</div>
 			<div class="panel panel-default" id="rocketRaceContainer" hidden="true">
@@ -314,7 +323,7 @@ $var loggedIn: $:LI
 				<div class="panel-body">
 		  		<canvas style="padding: 0;
 								margin: auto;
-								width: 100%;" id="rocketRace" width="1000" height="400"></canvas>
+								width: 100%" id="rocketRace" width="1000" height="800"></canvas>
 		  	</div>
 			</div>
 
