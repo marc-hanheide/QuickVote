@@ -99,6 +99,16 @@ $var loggedIn: $:LI
 		console.log(data);
 	}
 
+	function update_race(data) {
+		//number of teams:
+		team_array = data['userChart'].datasets[0].data;
+		x_pos = 50;
+		for (var i = 0; i < team_array.length; i++) {
+			create_rocket(x_pos);
+			x_pos = x_pos + 150;
+		}
+	}
+
 	function display_team_race() {
 		rr_ctx.fillStyle = "black";
 		rr_ctx.rect(0,0,1000,900);
@@ -108,6 +118,10 @@ $var loggedIn: $:LI
 		setInterval(function() {
 			display_rockets();
 		}, 400);
+	}
+
+	function create_rocket(x_coord) {
+		rr_ctx.drawImage(rocket_off,x_coord,y,50,90)
 	}
 
 	function display_rockets() {
@@ -140,7 +154,7 @@ $var loggedIn: $:LI
 			loadImages();
 
 			x = 50;
-			y = 700;
+			y = 650;
 			rr_canvas = document.getElementById("rocketRace");
 			rr_ctx = rr_canvas.getContext("2d");
 			Chart.defaults.global.responsive = true;
