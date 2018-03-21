@@ -111,7 +111,7 @@ $var loggedIn: $:LI
 			for (var i = 0; i < team_array.length; i++) {
 				found = false;
 				if (rocket_list.length == 0) {
-					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i]})
+					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650})
 					create_rocket(x_pos);
 					x_pos = x_pos + 150;
 				}
@@ -124,7 +124,7 @@ $var loggedIn: $:LI
 				}
 
 				if (!found) {
-					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i]})
+					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650})
 					create_rocket(x_pos);
 					x_pos = x_pos + 150;
 				}
@@ -133,16 +133,10 @@ $var loggedIn: $:LI
 		}
 
 	}
-	//rocket {index: 0; x_coord: 50; group_correct: 45.9}
+
 	function display_team_race() {
-		// rr_ctx.fillStyle = "black";
-		// rr_ctx.rect(0,0,1000,900);
-		// rr_ctx.fill();
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
-		// setInterval(function() {
-		// 	display_rockets();
-		// }, 400);
 	}
 
 	function create_rocket(x_coord) {
@@ -153,40 +147,40 @@ $var loggedIn: $:LI
 			for (var i = 0; i < rocket_list.length; i++) {
 				var y_coord = rocket_list[i].group_correct * 800;
 				y_coord = 800 - y_coord;
-				rocket_list[i].y_coord = y_coord;
+				if (rocket_list[i].y_coord != y_coord) {
+					rocket_list[i].y_coord = y_coord;
+					rocket_list[i].y_changed = true;
+				} else {
+					rocket_list[i].y_changed = false;
+				}
 			}
-			display_rockets();
+
+			setInterval(function() {
+				update_race(last_data);
+				display_rockets();
+			}, 300);
 	}
 
 	function display_rockets() {
 
-				updateFrame(0,0);
-		// 	for (var i = 0; i < rocket_list.length; i++) {
-		// 		create_rocket(rocket_list[i].x_coord);
-		// 	}
-		// if (rocket_state == true) {
-		// 		rr_ctx.drawImage(rocket,x,y,50,120);
-		// 		rocket_state = false;
-		// } else {
-		// 		rr_ctx.drawImage(rocket,x,y,50,90);
-	  //     rocket_state = true;
-		// }
+		updateFrame(0,0);
 		 for (var i = 0; i < rocket_list.length; i++) {
-		//
-		// 	y = rocket_list[i].y_coord;
 
-		// 	y = y -5;
-				for (var j = 700; j > rocket_list[i].y_coord; j = j - 10) {
-
-						updateFrame(rocket_list[i].x_coord, j);
-						if (rocket_state == true) {
-								rr_ctx.drawImage(rocket, rocket_list[i].x_coord, j, 50,120);
-								rocket_state = false;
+				if (rocket_list[i].y_changed == true || rocket_list[i].y_coord <= rocket_list[i].current_y_coord) {
+						updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
+						var distanceTravel = rocket_list[i].y_coord / rocket_list[i].current_y_coord;
+						distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+						if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
+							rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 						} else {
-								rr_ctx.drawImage(rocket, rocket_list[i].x_coord, j,50,90);
-						    rocket_state = true;
+							rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 						}
 
+						rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
+
+				} else {
+					updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
+					rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
 				}
 
 		 }
@@ -198,9 +192,6 @@ $var loggedIn: $:LI
 		} else {
 			rocket = rocket_off;
 		}
-		// rr_ctx.fillStyle = "red";
-		// rr_ctx.rect(x_pos,y_pos,50,120);
-		// rr_ctx.fill();
 		rr_ctx.drawImage(race_background,x_pos,y_pos, 50, 140,x_pos,y_pos, 50, 140);
 	}
 
