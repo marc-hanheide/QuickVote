@@ -16,6 +16,7 @@ $var loggedIn: $:LI
 	var rr_ctx;
 	var x;
 	var y;
+	var race_interval;
 	var rocket_list = [];
 	var enableRockets = false;
 
@@ -128,6 +129,7 @@ $var loggedIn: $:LI
 					create_rocket(x_pos);
 					x_pos = x_pos + 150;
 				}
+				rocket_list[i].group_correct = team_correctness[i];
 			}
 			calculate_ycoord();
 		}
@@ -155,8 +157,7 @@ $var loggedIn: $:LI
 				}
 			}
 
-			setInterval(function() {
-				update_race(last_data);
+			race_interval = setInterval(function() {
 				display_rockets();
 			}, 300);
 	}
@@ -166,24 +167,45 @@ $var loggedIn: $:LI
 		updateFrame(0,0);
 		 for (var i = 0; i < rocket_list.length; i++) {
 
-				if (rocket_list[i].y_changed == true || rocket_list[i].y_coord <= rocket_list[i].current_y_coord) {
-						updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
-						var distanceTravel = rocket_list[i].y_coord / rocket_list[i].current_y_coord;
-						distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
-						if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
-							rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
-						} else {
-							rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
-						}
-
-						rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
-
-				} else {
-					updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
-					rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
-				}
-
+			 var reachedTarget = false
+			 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
+				 //team answered incorrect answer - rocket needs to go down
+				 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+		 		 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+				 travelDown(i, distanceTravel);
+			 } else {
+				 //team answered correct answer - rocket needs to go up
+				 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+		 		 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+				 travelUp(i, distanceTravel);
+			 }
 		 }
+	}
+
+	function travelUp(i, distanceTravel) {
+		if (rocket_list[i].y_changed == true || parseInt(rocket_list[i].y_coord) < parseInt(rocket_list[i].current_y_coord)) {
+				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
+				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
+				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
+
+		} else {
+			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
+			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
+			clearInterval(race_interval);
+		}
+	}
+
+	function travelDown(i, distanceTravel) {
+		if (rocket_list[i].y_changed == true || parseInt(rocket_list[i].y_coord) > parseInt(rocket_list[i].current_y_coord)) {
+				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
+				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
+				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
+
+		} else {
+			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
+			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
+			clearInterval(race_interval);
+		}
 	}
 
 	function updateFrame(x_pos, y_pos) {
