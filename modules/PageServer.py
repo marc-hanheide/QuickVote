@@ -691,6 +691,7 @@ class results:
                 % (specificity * 100.0),
                 'accuracy': "%2.1f%%"
                 % (accuracy * 100.0),
+                'group_size': group_total_submissions,
                 'question': question['question']
                 if question is not None
                 else '*unknown*'

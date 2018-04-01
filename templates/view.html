@@ -18,6 +18,8 @@ $var loggedIn: $:LI
 	var race_interval;
 	var rocket_list = [];
 	var enableRockets = false;
+	var rocket_team_size = 0; //the desired team size where the rocket will start flying if this is met
+	var question = "";
 
 	function loadImages() {
 		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
@@ -106,71 +108,92 @@ $var loggedIn: $:LI
 	function update_race(data) {
 		//number of teams:
 		team_array = data['userChart'].labels;
+		var team_size = data['group_size'];
 		team_correctness = data['userChart'].datasets[1].data;
-		x_pos = 120;
 		if (team_array != undefined) {
-			for (var i = 0; i < team_array.length; i++) {
-				found = false;
-				if (rocket_list.length == 0) {
-					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650})
-					create_rocket(x_pos);
-					x_pos = x_pos + 100;
-				}
+				for (var i = 0; i < team_array.length; i++) {
+					found = false;
 
-				for (var j = 0; j < rocket_list.length; j++) {
-					if (rocket_list[j].index == parseInt(team_array[i])) {
-						found = true
-						break;
+					if (team_array[i] == 0) {
+						x_pos = 120;
+					} else {
+						x_pos = 120 + (parseInt(team_array[i]) * 100);
 					}
-				}
 
-				if (!found) {
-					rocket_list.push({index: i, x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650})
-					create_rocket(x_pos);
-					x_pos = x_pos + 100;
+					if (rocket_list.length == 0) {
+						rocket_list.push({index: parseInt(team_array[i]), x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650, group_size: team_size[parseInt(team_array[i])]})
+						create_rocket(parseInt(team_array[i]), x_pos);
+					}
+
+					for (var j = 0; j < rocket_list.length; j++) {
+						if (rocket_list[j].index == parseInt(team_array[i])) {
+							found = true
+							break;
+						}
+					}
+
+					if (!found) {
+						rocket_list.push({index: parseInt(team_array[i]), x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650, group_size: team_size[parseInt(team_array[i])]})
+						create_rocket(parseInt(team_array[i]), x_pos);
+					}
+					//these values need to be updated every time data comes in incase there is any changes
+					rocket_list[i].group_correct = team_correctness[i];
+					rocket_list[i].group_size = team_size[parseInt(team_array[i])];
 				}
-				rocket_list[i].group_correct = team_correctness[i];
-			}
-			calculate_ycoord();
+				calculate_ycoord();
 		}
 	}
 
-	function display_fuel() {
+	function display_fuel(index, x_coord) {
 		 var divBody = document.getElementById("rocketRaceFuel");
 
-		// <div class="progress" style="transform:rotate(270deg); width:200px">
-		// 		<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width:60%">
-		// 				60% Complete (warning)
-		// 		</div>
-		// </div>
-		for (var i = 0; i < rocket_list.length; i++) {
 			var progressBar = document.createElement("div");
 			progressBar.className = "progress";
-			progressBar.style = "transform:rotate(270deg); width:200px; display:inline-block; margin-top:100px; ";
-			progressBar.style.marginLeft = (i == 0 ? "-40px" : "-120px");
-			progressBar.style.left = (rocket_list[i].x_coord - 80) + "px";
+			progressBar.id = "progress" + index;
+			progressBar.style = "transform:rotate(270deg); width:200px; display:inline-block; margin-top:100px; height:30px ";
+			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-120px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
+
 			var inner = document.createElement("div");
 			inner.className = "progress-bar progress-bar-warning";
 			inner.setAttribute("role", "progressbar");
-		//	inner.setAttribute("style", "width:60%;");
 			progressBar.appendChild(inner);
-		}
+
+			var percentageText = document.createElement("div");
+			percentageText.color = "black";
+			percentageText.position = "relative";
+			progressBar.appendChild(percentageText);
 	}
 
 	function calculate_fuel() {
+			for (var i = 0; i < rocket_list.length; i++) {
+				try {
+					var percent = (rocket_list[i].group_size / rocket_team_size) * 100;
+					var outer = document.getElementById("progress" + rocket_list[i].index.toString());
+					var inner = outer.children[0];
+					percent = percent > 100 ? 100 : percent;
+					inner.style.width = percent + "%";
+					var percentageText = outer.children[1];
+					percentageText.innerText = percent + "% Full";
 
+
+				} catch(e) {
+
+				}
+
+			}
 	}
 
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
-		display_fuel();
+//		display_fuel();
 	}
 
-	function create_rocket(x_coord) {
+	function create_rocket(index, x_coord) {
 		rr_ctx.drawImage(rocket_off,x_coord,650,50,90);
+		display_fuel(index, x_coord);
 	}
 
 	function calculate_ycoord() {
@@ -183,8 +206,8 @@ $var loggedIn: $:LI
 				} else {
 					rocket_list[i].y_changed = false;
 				}
+				rocket_list[i].y_coord = rocket_list[i].y_coord > 650 ? 650 : rocket_list[i].y_coord;
 			}
-
 			race_interval = setInterval(function() {
 				display_rockets();
 			}, 300);
@@ -192,7 +215,9 @@ $var loggedIn: $:LI
 
 	function display_rockets() {
 
-		updateFrame(0,0);
+		 updateFrame(0,0);
+
+ 	   calculate_fuel();
 		 for (var i = 0; i < rocket_list.length; i++) {
 
 			 var reachedTarget = false
@@ -211,7 +236,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelUp(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || parseInt(rocket_list[i].y_coord) < parseInt(rocket_list[i].current_y_coord)) {
+		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) < Math.round(rocket_list[i].current_y_coord)) {
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
@@ -224,7 +249,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelDown(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || parseInt(rocket_list[i].y_coord) > parseInt(rocket_list[i].current_y_coord)) {
+		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) > Math.round(rocket_list[i].current_y_coord)) {
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
@@ -288,6 +313,14 @@ $var loggedIn: $:LI
 								//They want to show the rocket race
 								document.getElementById("userChartContainer").hidden = true;
 								document.getElementById("rocketRaceContainer").hidden = false;
+								rocket_team_size = prompt("Please enter the size of teams desired before the rockets start flying:", "5");
+
+								if (rocket_team_size == 0 || rocket_team_size == "" || rocket_team_size == null) {
+									rocket_team_size = 1;
+								} else {
+									rocket_team_size = parseInt(rocket_team_size);
+								}
+
 								enableRockets = true;
 								display_team_race();
 						}else{
