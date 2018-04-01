@@ -150,20 +150,19 @@ $var loggedIn: $:LI
 			var progressBar = document.createElement("div");
 			progressBar.className = "progress";
 			progressBar.id = "progress" + index;
-			progressBar.style = "transform:rotate(270deg); width:200px; display:inline-block; margin-top:100px; height:30px ";
+			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
 			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-120px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
 
 			var inner = document.createElement("div");
+			inner.style = "position:relative; color:black";
 			inner.className = "progress-bar progress-bar-warning";
 			inner.setAttribute("role", "progressbar");
+			inner.setAttribute("aria-valuemin", "0");
+			inner.setAttribute("aria-valuemax", "100");
+			inner.setAttribute("aria-valuenow", "0");
 			progressBar.appendChild(inner);
-
-			var percentageText = document.createElement("div");
-			percentageText.color = "black";
-			percentageText.position = "relative";
-			progressBar.appendChild(percentageText);
 	}
 
 	function calculate_fuel() {
@@ -174,10 +173,8 @@ $var loggedIn: $:LI
 					var inner = outer.children[0];
 					percent = percent > 100 ? 100 : percent;
 					inner.style.width = percent + "%";
-					var percentageText = outer.children[1];
-					percentageText.innerText = percent + "% Full";
-
-
+					inner.setAttribute("aria-valuenow", percent);
+					inner.innerText = percent + "% Full";
 				} catch(e) {
 
 				}
@@ -188,7 +185,6 @@ $var loggedIn: $:LI
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
-//		display_fuel();
 	}
 
 	function create_rocket(index, x_coord) {
@@ -219,18 +215,20 @@ $var loggedIn: $:LI
 
  	   calculate_fuel();
 		 for (var i = 0; i < rocket_list.length; i++) {
-
 			 var reachedTarget = false
-			 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
-				 //team answered incorrect answer - rocket needs to go down
-				 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-		 		 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
-				 travelDown(i, distanceTravel);
-			 } else {
-				 //team answered correct answer - rocket needs to go up
-				 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-		 		 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
-				 travelUp(i, distanceTravel);
+
+			 if (rocket_list[i].group_size >= rocket_team_size) {
+				 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
+					 //team answered incorrect answer - rocket needs to go down
+					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 travelDown(i, distanceTravel);
+				 } else {
+					 //team answered correct answer - rocket needs to go up
+					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 travelUp(i, distanceTravel);
+				 }
 			 }
 		 }
 	}
