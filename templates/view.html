@@ -127,7 +127,10 @@ $var loggedIn: $:LI
 
 					for (var j = 0; j < rocket_list.length; j++) {
 						if (rocket_list[j].index == parseInt(team_array[i])) {
-							found = true
+							found = true;
+							//these values need to be updated every time data comes in incase there is any changes
+							rocket_list[j].group_correct = team_correctness[i];
+							rocket_list[j].group_size = team_size[parseInt(team_array[i])];
 							break;
 						}
 					}
@@ -136,9 +139,7 @@ $var loggedIn: $:LI
 						rocket_list.push({index: parseInt(team_array[i]), x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650, group_size: team_size[parseInt(team_array[i])]})
 						create_rocket(parseInt(team_array[i]), x_pos);
 					}
-					//these values need to be updated every time data comes in incase there is any changes
-					rocket_list[i].group_correct = team_correctness[i];
-					rocket_list[i].group_size = team_size[parseInt(team_array[i])];
+
 				}
 				calculate_ycoord();
 		}
@@ -163,6 +164,7 @@ $var loggedIn: $:LI
 			inner.setAttribute("aria-valuemax", "100");
 			inner.setAttribute("aria-valuenow", "0");
 			progressBar.appendChild(inner);
+			doOrder();
 	}
 
 	function calculate_fuel() {
@@ -178,9 +180,18 @@ $var loggedIn: $:LI
 				} catch(e) {
 
 				}
-
 			}
 	}
+
+    function doOrder()
+    {
+			var main = document.getElementById("rocketRaceFuel");
+			[].map.call( main.children, Object ).sort( function ( a, b ) {
+	    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
+			}).forEach( function ( elem ) {
+	    	main.appendChild( elem );
+			});
+    }
 
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
