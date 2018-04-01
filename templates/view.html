@@ -196,6 +196,10 @@ $var loggedIn: $:LI
 			});
     }
 
+		function delete_fuel() {
+			$$("#rocketRaceFuel .progress").remove();
+		}
+
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
@@ -339,6 +343,8 @@ $var loggedIn: $:LI
 								document.getElementById("userChartContainer").hidden = false;
 								document.getElementById("rocketRaceContainer").hidden = true;
 								enableRockets = false;
+								rocket_list =  [];
+								delete_fuel();
 								if (last_data != null)
 	      					update_chart(last_data);
 						}
