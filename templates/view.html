@@ -152,7 +152,7 @@ $var loggedIn: $:LI
 			progressBar.className = "progress";
 			progressBar.id = "progress" + index;
 			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
-			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-120px");
+			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-160px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
 
@@ -165,6 +165,9 @@ $var loggedIn: $:LI
 			inner.setAttribute("aria-valuenow", "0");
 			progressBar.appendChild(inner);
 			doOrder();
+
+			var firstProgressBar = document.getElementsByClassName("progress")[0];
+			firstProgressBar.style.marginLeft = "-40px";
 	}
 
 	function calculate_fuel() {
