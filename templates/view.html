@@ -3,9 +3,30 @@ $var base: $:base
 $var title: QuickVote Results
 $var loggedIn: $:LI
 
+
 <script type="text/javascript">
 
 	last_data = null;
+	var race_background = new Image();
+	var rocket_off = new Image();
+	var rocket_on = new Image();
+	var rocket = new Image();
+	var fuel_tank = new Image();
+	var rocket_state = true;
+	var rr_canvas;
+	var rr_ctx;
+	var race_interval;
+	var rocket_list = [];
+	var enableRockets = false;
+	var rocket_team_size = 0; //the desired team size where the rocket will start flying if this is met
+	var question = "";
+
+	function loadImages() {
+		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
+		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
+		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
+		fuel_tank.src = "https://image.ibb.co/kZAj77/fuel_24_2x.png";
+	}
 
 	function new_session() {
 		var question_uuid = "$data['active_question']";
@@ -84,9 +105,193 @@ $var loggedIn: $:LI
 		console.log(data);
 	}
 
+	function update_race(data) {
+		//number of teams:
+		team_array = data['userChart'].labels;
+		var team_size = data['group_size'];
+		team_correctness = data['userChart'].datasets[1].data;
+		if (team_array != undefined) {
+				for (var i = 0; i < team_array.length; i++) {
+					found = false;
+
+					if (team_array[i] == 0) {
+						x_pos = 120;
+					} else {
+						x_pos = 120 + (parseInt(team_array[i]) * 100);
+					}
+
+					if (rocket_list.length == 0) {
+						rocket_list.push({index: parseInt(team_array[i]), x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650, group_size: team_size[parseInt(team_array[i])]})
+						create_rocket(parseInt(team_array[i]), x_pos);
+					}
+
+					for (var j = 0; j < rocket_list.length; j++) {
+						if (rocket_list[j].index == parseInt(team_array[i])) {
+							found = true;
+							//these values need to be updated every time data comes in incase there is any changes
+							rocket_list[j].group_correct = team_correctness[i];
+							rocket_list[j].group_size = team_size[parseInt(team_array[i])];
+							break;
+						}
+					}
+
+					if (!found) {
+						rocket_list.push({index: parseInt(team_array[i]), x_coord: x_pos, group_correct: team_correctness[i], current_y_coord: 650, group_size: team_size[parseInt(team_array[i])]})
+						create_rocket(parseInt(team_array[i]), x_pos);
+					}
+
+				}
+				calculate_ycoord();
+		}
+	}
+
+	function display_fuel(index, x_coord) {
+		 var divBody = document.getElementById("rocketRaceFuel");
+
+			var progressBar = document.createElement("div");
+			progressBar.className = "progress";
+			progressBar.id = "progress" + index;
+			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
+			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-160px");
+			progressBar.style.top = "50px";
+			divBody.append(progressBar);
+
+			var inner = document.createElement("div");
+			inner.style = "position:relative; color:black";
+			inner.className = "progress-bar progress-bar-warning";
+			inner.setAttribute("role", "progressbar");
+			inner.setAttribute("aria-valuemin", "0");
+			inner.setAttribute("aria-valuemax", "100");
+			inner.setAttribute("aria-valuenow", "0");
+			progressBar.appendChild(inner);
+			doOrder();
+
+			var firstProgressBar = document.getElementsByClassName("progress")[0];
+			firstProgressBar.style.marginLeft = "-40px";
+	}
+
+	function calculate_fuel() {
+			for (var i = 0; i < rocket_list.length; i++) {
+				try {
+					var percent = (rocket_list[i].group_size / rocket_team_size) * 100;
+					var outer = document.getElementById("progress" + rocket_list[i].index.toString());
+					var inner = outer.children[0];
+					percent = percent > 100 ? 100 : percent;
+					inner.style.width = percent + "%";
+					inner.setAttribute("aria-valuenow", percent);
+					inner.innerText = percent + "% Full";
+				} catch(e) {
+
+				}
+			}
+	}
+
+    function doOrder()
+    {
+			var main = document.getElementById("rocketRaceFuel");
+			[].map.call( main.children, Object ).sort( function ( a, b ) {
+	    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
+			}).forEach( function ( elem ) {
+	    	main.appendChild( elem );
+			});
+    }
+
+		function delete_fuel() {
+			$$("#rocketRaceFuel .progress").remove();
+		}
+
+	function display_team_race() {
+		rr_ctx.drawImage(race_background,0,0);
+		update_race(last_data);
+	}
+
+	function create_rocket(index, x_coord) {
+		rr_ctx.drawImage(rocket_off,x_coord,650,50,90);
+		display_fuel(index, x_coord);
+	}
+
+	function calculate_ycoord() {
+			for (var i = 0; i < rocket_list.length; i++) {
+				var y_coord = rocket_list[i].group_correct * 800;
+				y_coord = 800 - y_coord;
+				if (rocket_list[i].y_coord != y_coord) {
+					rocket_list[i].y_coord = y_coord;
+					rocket_list[i].y_changed = true;
+				} else {
+					rocket_list[i].y_changed = false;
+				}
+				rocket_list[i].y_coord = rocket_list[i].y_coord > 650 ? 650 : rocket_list[i].y_coord;
+			}
+			race_interval = setInterval(function() {
+				display_rockets();
+			}, 300);
+	}
+
+	function display_rockets() {
+
+		 updateFrame(0,0);
+
+ 	   calculate_fuel();
+		 for (var i = 0; i < rocket_list.length; i++) {
+			 var reachedTarget = false
+
+			 if (rocket_list[i].group_size >= rocket_team_size) {
+				 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
+					 //team answered incorrect answer - rocket needs to go down
+					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 travelDown(i, distanceTravel);
+				 } else {
+					 //team answered correct answer - rocket needs to go up
+					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
+					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 travelUp(i, distanceTravel);
+				 }
+			 }
+		 }
+	}
+
+	function travelUp(i, distanceTravel) {
+		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) < Math.round(rocket_list[i].current_y_coord)) {
+				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
+				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
+				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
+
+		} else {
+			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
+			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
+			clearInterval(race_interval);
+		}
+	}
+
+	function travelDown(i, distanceTravel) {
+		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) > Math.round(rocket_list[i].current_y_coord)) {
+				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
+				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
+				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
+
+		} else {
+			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
+			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
+			clearInterval(race_interval);
+		}
+	}
+
+	function updateFrame(x_pos, y_pos) {
+		if (rocket_state == true) {
+			rocket = rocket_on;
+		} else {
+			rocket = rocket_off;
+		}
+		rr_ctx.drawImage(race_background,x_pos,y_pos, 50, 140,x_pos,y_pos, 50, 140);
+	}
 
 	$$(document).ready(function () {
 			update();
+			loadImages();
+
+			rr_canvas = document.getElementById("rocketRace");
+			rr_ctx = rr_canvas.getContext("2d");
 			Chart.defaults.global.responsive = true;
 
 //				$$.getJSON("$data['get_url']", function (data) {
@@ -94,6 +299,9 @@ $var loggedIn: $:LI
 			var source = new EventSource("$data['get_url']");
 			source.onmessage = function(event) {
 			    update_chart(JSON.parse(event.data));
+					if (enableRockets) {
+						update_race(JSON.parse(event.data));
+					}
 			};
 
 			$$('#display_toggle').change(function() {
@@ -116,6 +324,31 @@ $var loggedIn: $:LI
           }
         });
 
+				$$('#rocket_race').change(function(){
+						if ($$(this).prop("checked")){
+								//They want to show the rocket race
+								document.getElementById("userChartContainer").hidden = true;
+								document.getElementById("rocketRaceContainer").hidden = false;
+								rocket_team_size = prompt("Please enter the size of teams desired before the rockets start flying:", "5");
+
+								if (rocket_team_size == 0 || rocket_team_size == "" || rocket_team_size == null) {
+									rocket_team_size = 1;
+								} else {
+									rocket_team_size = parseInt(rocket_team_size);
+								}
+
+								enableRockets = true;
+								display_team_race();
+						}else{
+								document.getElementById("userChartContainer").hidden = false;
+								document.getElementById("rocketRaceContainer").hidden = true;
+								enableRockets = false;
+								rocket_list =  [];
+								delete_fuel();
+								if (last_data != null)
+	      					update_chart(last_data);
+						}
+					});
 		}
 	)
 </script>
@@ -210,6 +443,12 @@ $var loggedIn: $:LI
           </label>
         </div>
 
+				<div class="checkbox-inline">
+				<label>
+					<input id="rocket_race" type="checkbox" data-toggle="toggle">
+					Rocket Race
+				</label>
+			</div>
 
 		    	</h3>
 		  	</div>
@@ -227,7 +466,7 @@ $var loggedIn: $:LI
 				</div>
 		  	</div>
 	  	</div>
-		<div class="panel panel-default">
+		<div class="panel panel-default" id="userChartContainer">
 		  	<div class="panel-heading">
 		    	<h3 class="panel-title">Team Performance
 		    	</h3>
@@ -236,10 +475,23 @@ $var loggedIn: $:LI
 		  		<canvas style="padding: 0;
 								margin: auto;
 								display: block;
-								width: 600px;" id="userChart" width="500" height="300"></canvas>
+								width: 100%;" id="userChart" width="1000" height="800"></canvas>
 		  	</div>
-
-		</div>
+			</div>
+			<div class="panel panel-default" id="rocketRaceContainer" hidden="true">
+					<div class="panel-heading">
+						<h3 class="panel-title">Team Performance
+						</h3>
+					</div>
+				<div class="panel-body">
+		  		<canvas style="padding: 0;
+								margin: auto;
+								width: 100%" id="rocketRace" width="1000" height="800"></canvas>
+		  	</div>
+				<div class="panel-body" id="rocketRaceFuel" style="width:1000px; height:300px">
+					<img src="https://image.ibb.co/kZAj77/fuel_24_2x.png" style="position:relative">
+				</div>
+			</div>
 
 	</div>
 </div>

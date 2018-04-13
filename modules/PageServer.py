@@ -691,6 +691,7 @@ class results:
                 % (specificity * 100.0),
                 'accuracy': "%2.1f%%"
                 % (accuracy * 100.0),
+                'group_size': group_total_submissions,
                 'question': question['question']
                 if question is not None
                 else '*unknown*'
@@ -735,7 +736,7 @@ class results:
             data['dummy'] = config.dummy_data
             r = self.response(dumps(data))
             #print r
-            yield r
+            return r
 
     def GET_history(self, domain, uuid):
         web.header('Content-Type', 'application/json')
