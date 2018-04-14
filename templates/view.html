@@ -114,10 +114,10 @@ $var loggedIn: $:LI
 				for (var i = 0; i < team_array.length; i++) {
 					found = false;
 
-					if (team_array[i] == 0) {
+					if (team_array[i] == 1) {
 						x_pos = 120;
 					} else {
-						x_pos = 120 + (parseInt(team_array[i]) * 100);
+						x_pos = 120 + (parseInt(team_array[i] - 1) * 100);
 					}
 
 					if (rocket_list.length == 0) {
@@ -147,7 +147,7 @@ $var loggedIn: $:LI
 
 	function display_fuel() {
 		 var divBody = document.getElementById("rocketRaceFuel");
-		 for (var i = 0; i < 6; i++) {
+		 for (var i = 1; i < 7; i++) {
 			var progressBar = document.createElement("div");
 			progressBar.className = "progress";
 			progressBar.id = "progress" + i;
