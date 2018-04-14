@@ -24,9 +24,14 @@ class ask_question:
            domain_session_uuid != domain_session_uuid_cookie:
             n_group = qv_domains.get_n_groups(domain)
 
-            print n_group, domain_session_uuid, domain_session_uuid_cookie
+            #print n_group, domain_session_uuid, domain_session_uuid_cookie
             if n_group > 0:
-                group = randint(1, n_group)
+            	  ng = qv_domains.last_group_assignment[domain] + 1
+            	  if ng > n_group:
+            	  		ng = 1
+            	  group = ng
+            	  qv_domains.last_group_assignment[domain] = ng
+                #group = randint(1, n_group)
             else:
                 group = 0
             web.setcookie('qv_user_group', str(group))

@@ -1,6 +1,7 @@
 # common imports
 from modules.common import *
 import modules.glob as glob
+from collections import defaultdict
 
 import math
 
@@ -12,6 +13,7 @@ class domain_manager:
     self.domain_coll.create_index('name', unique=True)
     self.domain_coll.create_index('admin_url', unique=True)
     self.domain_coll.create_index([('lastActive',DESCENDING)],unique=False)
+    self.last_group_assignment = defaultdict(int)
 
   def ensure_debug_domain(self):
     # ensure testdomain
