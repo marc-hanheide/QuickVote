@@ -168,6 +168,7 @@ $var loggedIn: $:LI
 
 			var firstProgressBar = document.getElementsByClassName("progress")[0];
 			firstProgressBar.style.marginLeft = "-40px";
+
 	}
 
 	function calculate_fuel() {
@@ -186,19 +187,19 @@ $var loggedIn: $:LI
 			}
 	}
 
-    function doOrder()
-    {
-			var main = document.getElementById("rocketRaceFuel");
-			[].map.call( main.children, Object ).sort( function ( a, b ) {
-	    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
-			}).forEach( function ( elem ) {
-	    	main.appendChild( elem );
-			});
-    }
+  function doOrder()
+  {
+		var main = document.getElementById("rocketRaceFuel");
+		[].map.call( main.children, Object ).sort( function ( a, b ) {
+    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
+		}).forEach( function ( elem ) {
+    	main.appendChild( elem );
+		});
+  }
 
-		function delete_fuel() {
-			$$("#rocketRaceFuel .progress").remove();
-		}
+	function delete_fuel() {
+		$$("#rocketRaceFuel .progress").remove();
+	}
 
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
@@ -212,7 +213,7 @@ $var loggedIn: $:LI
 
 	function calculate_ycoord() {
 			for (var i = 0; i < rocket_list.length; i++) {
-				var y_coord = rocket_list[i].group_correct * 800;
+				var y_coord = parseInt(rocket_list[i].group_correct * 800);
 				y_coord = 800 - y_coord;
 				if (rocket_list[i].y_coord != y_coord) {
 					rocket_list[i].y_coord = y_coord;
@@ -233,18 +234,16 @@ $var loggedIn: $:LI
 
  	   calculate_fuel();
 		 for (var i = 0; i < rocket_list.length; i++) {
-			 var reachedTarget = false
-
 			 if (rocket_list[i].group_size >= rocket_team_size) {
 				 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
 					 //team answered incorrect answer - rocket needs to go down
-					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 var distanceTravel = rocket_list[i].y_coord == 0 ? 2 : (parseInt(2 *(rocket_list[i].current_y_coord / rocket_list[i].y_coord)));
+					 distanceTravel = distanceTravel <= 0 ? 2 : distanceTravel;
 					 travelDown(i, distanceTravel);
 				 } else {
 					 //team answered correct answer - rocket needs to go up
-					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 var distanceTravel = rocket_list[i].y_coord == 0 ? 2 : (parseInt(2 *(rocket_list[i].current_y_coord / rocket_list[i].y_coord)));
+					 distanceTravel = distanceTravel <= 0 ? 2 : distanceTravel;
 					 travelUp(i, distanceTravel);
 				 }
 			 }
@@ -252,7 +251,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelUp(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) < Math.round(rocket_list[i].current_y_coord)) {
+		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord < rocket_list[i].current_y_coord) || rocket_list[i].y_coord < rocket_list[i].current_y_coord) {
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
@@ -265,7 +264,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelDown(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) > Math.round(rocket_list[i].current_y_coord)) {
+		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord > rocket_list[i].current_y_coord) || rocket_list[i].y_coord > rocket_list[i].current_y_coord){
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
