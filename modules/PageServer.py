@@ -736,7 +736,7 @@ class results:
             data['dummy'] = config.dummy_data
             r = self.response(dumps(data))
             #print r
-            return r
+	    yield r
 
     def GET_history(self, domain, uuid):
         web.header('Content-Type', 'application/json')
