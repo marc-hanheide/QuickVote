@@ -22,7 +22,7 @@ $var loggedIn: $:LI
 	var question = "";
 
 	function loadImages() {
-		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
+		race_background.src = "https://image.ibb.co/e5m297/sai_Uf_L2_space_star_background_numbered.png";
 		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
 		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
 		fuel_tank.src = "https://image.ibb.co/kZAj77/fuel_24_2x.png";
@@ -152,7 +152,7 @@ $var loggedIn: $:LI
 			progressBar.className = "progress";
 			progressBar.id = "progress" + index;
 			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
-			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-160px");
+			progressBar.style.marginLeft = (index == 0 ? "-60px" : "-165px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
 
@@ -167,7 +167,7 @@ $var loggedIn: $:LI
 			doOrder();
 
 			var firstProgressBar = document.getElementsByClassName("progress")[0];
-			firstProgressBar.style.marginLeft = "-40px";
+			firstProgressBar.style.marginLeft = "-60px";
 
 	}
 
@@ -180,7 +180,7 @@ $var loggedIn: $:LI
 					percent = percent > 100 ? 100 : percent;
 					inner.style.width = percent + "%";
 					inner.setAttribute("aria-valuenow", percent);
-					inner.innerText = percent + "% Full";
+					inner.innerText = parseInt(percent) + "% Full";
 				} catch(e) {
 
 				}
