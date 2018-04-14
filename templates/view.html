@@ -145,14 +145,14 @@ $var loggedIn: $:LI
 		}
 	}
 
-	function display_fuel(index, x_coord) {
+	function display_fuel() {
 		 var divBody = document.getElementById("rocketRaceFuel");
-
+		 for (var i = 0; i < 6; i++) {
 			var progressBar = document.createElement("div");
 			progressBar.className = "progress";
-			progressBar.id = "progress" + index;
-			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
-			progressBar.style.marginLeft = (index == 0 ? "-60px" : "-165px");
+			progressBar.id = "progress" + i;
+			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px; visibility:hidden";
+			progressBar.style.marginLeft = (i == 0 ? "-60px" : "-165px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
 
@@ -168,7 +168,7 @@ $var loggedIn: $:LI
 
 			var firstProgressBar = document.getElementsByClassName("progress")[0];
 			firstProgressBar.style.marginLeft = "-60px";
-
+		}
 	}
 
 	function calculate_fuel() {
@@ -176,6 +176,7 @@ $var loggedIn: $:LI
 				try {
 					var percent = (rocket_list[i].group_size / rocket_team_size) * 100;
 					var outer = document.getElementById("progress" + rocket_list[i].index.toString());
+					outer.style.visibility = "visible";
 					var inner = outer.children[0];
 					percent = percent > 100 ? 100 : percent;
 					inner.style.width = percent + "%";
@@ -204,11 +205,11 @@ $var loggedIn: $:LI
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
+		display_fuel();
 	}
 
 	function create_rocket(index, x_coord) {
 		rr_ctx.drawImage(rocket_off,x_coord,650,50,90);
-		display_fuel(index, x_coord);
 	}
 
 	function calculate_ycoord() {
