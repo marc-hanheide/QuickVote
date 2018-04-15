@@ -15,3 +15,11 @@ db:
   volumes:
     - /vol/mongodb:/data/db
 
+express:
+  image: mongo-express
+  links:
+    - db
+  environment:
+    - ME_CONFIG_MONGODB_SERVER=db
+  ports:
+    - "8081:8081"
