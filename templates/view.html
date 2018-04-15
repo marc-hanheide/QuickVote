@@ -22,7 +22,7 @@ $var loggedIn: $:LI
 	var question = "";
 
 	function loadImages() {
-		race_background.src = "https://image.ibb.co/ieLekH/sai_Uf_L2_space_star_background.png";
+		race_background.src = "https://image.ibb.co/e5m297/sai_Uf_L2_space_star_background_numbered.png";
 		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
 		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
 		fuel_tank.src = "https://image.ibb.co/kZAj77/fuel_24_2x.png";
@@ -114,10 +114,10 @@ $var loggedIn: $:LI
 				for (var i = 0; i < team_array.length; i++) {
 					found = false;
 
-					if (team_array[i] == 0) {
+					if (team_array[i] == 1) {
 						x_pos = 120;
 					} else {
-						x_pos = 120 + (parseInt(team_array[i]) * 100);
+						x_pos = 120 + (parseInt(team_array[i] - 1) * 100);
 					}
 
 					if (rocket_list.length == 0) {
@@ -145,14 +145,14 @@ $var loggedIn: $:LI
 		}
 	}
 
-	function display_fuel(index, x_coord) {
+	function display_fuel() {
 		 var divBody = document.getElementById("rocketRaceFuel");
-
+		 for (var i = 1; i < 7; i++) {
 			var progressBar = document.createElement("div");
 			progressBar.className = "progress";
-			progressBar.id = "progress" + index;
-			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px ";
-			progressBar.style.marginLeft = (index == 0 ? "-40px" : "-160px");
+			progressBar.id = "progress" + i;
+			progressBar.style = "transform:rotate(270deg); width:250px; display:inline-block; margin-top:100px; height:30px; visibility:hidden";
+			progressBar.style.marginLeft = (i == 0 ? "-60px" : "-165px");
 			progressBar.style.top = "50px";
 			divBody.append(progressBar);
 
@@ -167,7 +167,8 @@ $var loggedIn: $:LI
 			doOrder();
 
 			var firstProgressBar = document.getElementsByClassName("progress")[0];
-			firstProgressBar.style.marginLeft = "-40px";
+			firstProgressBar.style.marginLeft = "-60px";
+		}
 	}
 
 	function calculate_fuel() {
@@ -175,44 +176,45 @@ $var loggedIn: $:LI
 				try {
 					var percent = (rocket_list[i].group_size / rocket_team_size) * 100;
 					var outer = document.getElementById("progress" + rocket_list[i].index.toString());
+					outer.style.visibility = "visible";
 					var inner = outer.children[0];
 					percent = percent > 100 ? 100 : percent;
 					inner.style.width = percent + "%";
 					inner.setAttribute("aria-valuenow", percent);
-					inner.innerText = percent + "% Full";
+					inner.innerText = parseInt(percent) + "% Full";
 				} catch(e) {
 
 				}
 			}
 	}
 
-    function doOrder()
-    {
-			var main = document.getElementById("rocketRaceFuel");
-			[].map.call( main.children, Object ).sort( function ( a, b ) {
-	    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
-			}).forEach( function ( elem ) {
-	    	main.appendChild( elem );
-			});
-    }
+  function doOrder()
+  {
+		var main = document.getElementById("rocketRaceFuel");
+		[].map.call( main.children, Object ).sort( function ( a, b ) {
+    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
+		}).forEach( function ( elem ) {
+    	main.appendChild( elem );
+		});
+  }
 
-		function delete_fuel() {
-			$$("#rocketRaceFuel .progress").remove();
-		}
+	function delete_fuel() {
+		$$("#rocketRaceFuel .progress").remove();
+	}
 
 	function display_team_race() {
 		rr_ctx.drawImage(race_background,0,0);
 		update_race(last_data);
+		display_fuel();
 	}
 
 	function create_rocket(index, x_coord) {
 		rr_ctx.drawImage(rocket_off,x_coord,650,50,90);
-		display_fuel(index, x_coord);
 	}
 
 	function calculate_ycoord() {
 			for (var i = 0; i < rocket_list.length; i++) {
-				var y_coord = rocket_list[i].group_correct * 800;
+				var y_coord = parseInt(rocket_list[i].group_correct * 800);
 				y_coord = 800 - y_coord;
 				if (rocket_list[i].y_coord != y_coord) {
 					rocket_list[i].y_coord = y_coord;
@@ -233,18 +235,16 @@ $var loggedIn: $:LI
 
  	   calculate_fuel();
 		 for (var i = 0; i < rocket_list.length; i++) {
-			 var reachedTarget = false
-
 			 if (rocket_list[i].group_size >= rocket_team_size) {
 				 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
 					 //team answered incorrect answer - rocket needs to go down
-					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 var distanceTravel = rocket_list[i].y_coord == 0 ? 2 : (parseInt(2 *(rocket_list[i].current_y_coord / rocket_list[i].y_coord)));
+					 distanceTravel = distanceTravel <= 0 ? 2 : distanceTravel;
 					 travelDown(i, distanceTravel);
 				 } else {
 					 //team answered correct answer - rocket needs to go up
-					 var distanceTravel = 2 * (rocket_list[i].current_y_coord / rocket_list[i].y_coord);
-					 distanceTravel = distanceTravel == 0 ? 5 : distanceTravel;
+					 var distanceTravel = rocket_list[i].y_coord == 0 ? 2 : (parseInt(2 *(rocket_list[i].current_y_coord / rocket_list[i].y_coord)));
+					 distanceTravel = distanceTravel <= 0 ? 2 : distanceTravel;
 					 travelUp(i, distanceTravel);
 				 }
 			 }
@@ -252,7 +252,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelUp(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) < Math.round(rocket_list[i].current_y_coord)) {
+		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord < rocket_list[i].current_y_coord) || rocket_list[i].y_coord < rocket_list[i].current_y_coord) {
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
@@ -265,7 +265,7 @@ $var loggedIn: $:LI
 	}
 
 	function travelDown(i, distanceTravel) {
-		if (rocket_list[i].y_changed == true || Math.round(rocket_list[i].y_coord) > Math.round(rocket_list[i].current_y_coord)) {
+		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord > rocket_list[i].current_y_coord) || rocket_list[i].y_coord > rocket_list[i].current_y_coord){
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
